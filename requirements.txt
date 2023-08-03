@@ -1,0 +1,3 @@
+### Requirements file, simply with MadMiner, since its installation will require most of the necessary packages (e.g. Numpy, PyTorch...)
+madminer=0.9.3
+pandas
