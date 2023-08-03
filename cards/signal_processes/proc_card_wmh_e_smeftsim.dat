@@ -1,0 +1,2 @@
+import model ${UFOMODEL_FOLDER}/SMEFTsim_U35_MwScheme_UFO-all_WHbb_massless
+generate p p > h > e- ve~ b b~ QCD=0 QED=99 NP=1
