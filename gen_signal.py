@@ -61,6 +61,8 @@ if __name__ == "__main__":
 
     parser.add_argument('--generate_BSM',help='Generate additional events at the BSM benchmarks',action='store_true',default=False)
 
+    parser.add_argument('--mg_dir',help='Path for MadGraph installation',required=True)
+
     args=parser.parse_args()
 
     # Load morphing setup file
@@ -78,14 +80,12 @@ if __name__ == "__main__":
     else:
         param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat'
 
-    # LIP specifics
-    mg_dir = '/cvmfs/sw.el7/gcc63/madgraph/3.3.1/b01/' # TODO: change to the path to your installation
     init_command=None,
 
     # SM samples with MG (re)weights of BSM benchmarks
     # W+ -> mu+ vm
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/wph_mu_smeftsim_SM',
         mg_process_directory=f'{args.main_dir}/signal_samples/wph_mu_smeftsim_SM',
         proc_card_file='cards/signal_processes/proc_card_wph_mu_smeftsim.dat',
@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     # W+ -> e+ ve
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/wph_e_smeftsim_SM',
         mg_process_directory=f'{args.main_dir}/signal_samples/wph_e_smeftsim_SM',
         proc_card_file='cards/signal_processes/proc_card_wph_e_smeftsim.dat',
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     # W- -> mu- vm~
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/wmh_mu_smeftsim_SM',
         mg_process_directory=f'{args.main_dir}/signal_samples/wmh_mu_smeftsim_SM',
         proc_card_file='cards/signal_processes/proc_card_wmh_mu_smeftsim.dat',
@@ -127,7 +127,7 @@ if __name__ == "__main__":
 
     # W- -> e- ve~
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/wmh_e_smeftsim_SM',
         mg_process_directory=f'{args.main_dir}/signal_samples/wmh_e_smeftsim_SM',
         proc_card_file='cards/signal_processes/proc_card_wmh_e_smeftsim.dat',
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     # BSM samples with MG (re)weights of other benchmarks (inc. SM)
     if args.generate_BSM:
         miner.run_multiple(
-            mg_directory=mg_dir,
+            mg_directory=args.mg_dir,
             log_directory=f'{args.main_dir}/logs/wph_mu_smeftsim_BSM',
             mg_process_directory=f'{args.main_dir}/signal_samples/wph_mu_smeftsim_BSM',
             proc_card_file='cards/signal_processes/proc_card_wph_mu_smeftsim.dat',
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         )
 
         miner.run_multiple(
-            mg_directory=mg_dir,
+            mg_directory=args.mg_dir,
             log_directory=f'{args.main_dir}/logs/wph_e_smeftsim_BSM',
             mg_process_directory=f'{args.main_dir}/signal_samples/wph_e_smeftsim_BSM',
             proc_card_file='cards/signal_processes/proc_card_wph_e_smeftsim.dat',
@@ -168,7 +168,7 @@ if __name__ == "__main__":
         )
 
         miner.run_multiple(
-            mg_directory=mg_dir,
+            mg_directory=args.mg_dir,
             log_directory=f'{args.main_dir}/logs/wmh_mu_smeftsim_BSM',
             mg_process_directory=f'{args.main_dir}/signal_samples/wmh_mu_smeftsim_BSM',
             proc_card_file='cards/signal_processes/proc_card_wmh_mu_smeftsim.dat',
@@ -181,7 +181,7 @@ if __name__ == "__main__":
         )
 
         miner.run_multiple(
-            mg_directory=mg_dir,
+            mg_directory=args.mg_dir,
             log_directory=f'{args.main_dir}/logs/wmh_e_smeftsim_BSM',
             mg_process_directory=f'{args.main_dir}/signal_samples/wmh_e_smeftsim_BSM',
             proc_card_file='cards/signal_processes/proc_card_wmh_e_smeftsim.dat',

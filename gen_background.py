@@ -47,6 +47,8 @@ if __name__ == "__main__":
 
     parser.add_argument('--prepare_scripts',help='Prepares only run scripts to e.g. submit to a batch system separately',default=False,action='store_true')
 
+    parser.add_argument('--mg_dir',help='Path for MadGraph installation',required=True)
+
     args=parser.parse_args()
 
     # Load morphing setup file
@@ -54,15 +56,13 @@ if __name__ == "__main__":
     miner.load(f'{args.main_dir}/{args.setup_file}.h5')
     lhe = LHEReader(f'{args.main_dir}/{args.setup_file}.h5')
 
-    # LIP Madgraph specifics
-    mg_dir = '/cvmfs/sw.el7/gcc63/madgraph/3.3.1/b01/' # TODO: change to the path to your installation
     init_command=None,
 
     # W + b b~, divided by W decay channel and charge
 
     # W+ -> mu+ vm 
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/wpbb_mu_background',
         mg_process_directory=f'{args.main_dir}/background_samples/wpbb_mu_background',
         proc_card_file='cards/background_processes/proc_card_wpbb_mu.dat',
@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     # W+ -> e+ ve 
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/wpbb_e_background',
         mg_process_directory=f'{args.main_dir}/background_samples/wpbb_e_background',
         proc_card_file='cards/background_processes/proc_card_wpbb_e.dat',
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     # W- -> mu- vm~
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/wmbb_mu_background',
         mg_process_directory=f'{args.main_dir}/background_samples/wmbb_mu_background',
         proc_card_file='cards/background_processes/proc_card_wmbb_mu.dat',
@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
     # W- -> e- ve~
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/wmbb_e_background',
         mg_process_directory=f'{args.main_dir}/background_samples/wmbb_e_background',
         proc_card_file='cards/background_processes/proc_card_wmbb_e.dat',
@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     # t+, W+ -> mu+ vm 
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/tpb_mu_background',
         mg_process_directory=f'{args.main_dir}/background_samples/tpb_mu_background',
         proc_card_file='cards/background_processes/proc_card_tpb_mu.dat',
@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
     # t+, W+ -> e+ ve 
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/tpb_e_background',
         mg_process_directory=f'{args.main_dir}/background_samples/tpb_e_background',
         proc_card_file='cards/background_processes/proc_card_tpb_e.dat',
@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
     # t-, W- -> mu- vm~ 
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/tmb_mu_background',
         mg_process_directory=f'{args.main_dir}/background_samples/tmb_mu_background',
         proc_card_file='cards/background_processes/proc_card_tmb_mu.dat',
@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     # t-, W- -> e- ve~
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/tmb_e_background',
         mg_process_directory=f'{args.main_dir}/background_samples/tmb_e_background',
         proc_card_file='cards/background_processes/proc_card_tmb_e.dat',
@@ -186,7 +186,7 @@ if __name__ == "__main__":
 
     # W+ -> mu+ vm, W- -> j j 
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/tt_mupjj_background',
         mg_process_directory=f'{args.main_dir}/background_samples/tt_mupjj_background',
         proc_card_file='cards/background_processes/proc_card_tt_mupjj.dat',
@@ -201,7 +201,7 @@ if __name__ == "__main__":
 
     # W+ -> e+ ve, W- -> j j 
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/tt_epjj_background',
         mg_process_directory=f'{args.main_dir}/background_samples/tt_epjj_background',
         proc_card_file='cards/background_processes/proc_card_tt_epjj.dat',
@@ -216,7 +216,7 @@ if __name__ == "__main__":
 
     # W+ -> j j, W- -> mu- vm~ 
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/tt_mumjj_background',
         mg_process_directory=f'{args.main_dir}/background_samples/tt_mumjj_background',
         proc_card_file='cards/background_processes/proc_card_tt_mumjj.dat',
@@ -231,7 +231,7 @@ if __name__ == "__main__":
 
     # W+ -> j j, W- -> e- ve~
     miner.run(
-        mg_directory=mg_dir,
+        mg_directory=args.mg_dir,
         log_directory=f'{args.main_dir}/logs/tt_emjj_background',
         mg_process_directory=f'{args.main_dir}/background_samples/tt_emjj_background',
         proc_card_file='cards/background_processes/proc_card_tt_emjj.dat',

@@ -17,7 +17,7 @@ To run the analysis chain the programs must be ran in a certain order:
 
 1. _setup.py_: defines the Wilson coefficient and morphing setup and creates setup file.
 
-2. _gen\_signal/background.py_: generate signal and background samples or prepare files to run sample generation on batch systems (HERE YOU WILL NEED THE CHANGE THE PATH TO YOUR MADGRAPH INSTALLATION)
+2. _gen\_signal/background.py_: generate signal and background samples or prepare files to run sample generation on batch systems
 
 3. _parton\_level\_analysis\_full.py_: performs analysis (simulating detector response via smearing of parton-level quantities) for the observable set with the full neutrino 4-vector ('full')
 
@@ -35,4 +35,4 @@ To run the analysis chain the programs must be ran in a certain order:
 
 Steps 3 and 4 can be run simultaneously. Steps 5 has to run before step 6, but after that, step 6, 7, 8 and 9 can be run simultaneously.
 
-All of the scripts have an argument parser, just type _script_name_ -h to see the list of available options.
+All of the scripts have an argument parser describing their API, just type _script_name_ -h to see the list of available options.
