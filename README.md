@@ -1,6 +1,6 @@
 # Simulation-based inference in the search for CP violation in leptonic WH production
 
-Created for benchmarking different techniques to search for CP violation in the HWW vertex in leptonic WH production.
+This is the companion code to https://arxiv.org/abs/2308.02882, for benchmarking different techniques to search for CP violation in the HWW vertex in leptonic WH production.
 
 Compares energy-related observables, angular observables and combinations thereof with a simulation-based inference method, SALLY (Score Approximates Likelihood LocallY), that aims to reconstruct a detector-level optimal observable around the SM point.
 
