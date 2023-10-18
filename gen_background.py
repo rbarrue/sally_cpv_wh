@@ -43,11 +43,11 @@ if __name__ == "__main__":
 
     parser.add_argument('--do_pythia',help='whether or not to run Pythia after Madgraph',default=False,action='store_true')
 
-    parser.add_argument('--pythia_card',help='if running pythia, the path for the Pythia card',default='cards/pythia8_card.dat')
-
     parser.add_argument('--prepare_scripts',help='Prepares only run scripts to e.g. submit to a batch system separately',default=False,action='store_true')
 
     parser.add_argument('--mg_dir',help='Path for MadGraph installation',required=True)
+
+    parser.add_argument('--init_command',help='Initial command to be ran before generation (for e.g. setting environment variables)',default=None)
 
     args=parser.parse_args()
 
@@ -56,192 +56,26 @@ if __name__ == "__main__":
     miner.load(f'{args.main_dir}/{args.setup_file}.h5')
     lhe = LHEReader(f'{args.main_dir}/{args.setup_file}.h5')
 
-    init_command=None,
+    init_command=None
 
-    # W + b b~, divided by W decay channel and charge
+    samples=['wpbb_mu','wpbb_e','wmbb_mu','wmbb_e'] # W + (b-)jets
+    samples+=['tpb_mu','tpb_e','tmb_mu','tmb_e'] # single top production (tb channel)
+    samples+=['tt_mupjj','tt_epjj','tt_mumjj','tt_emjj'] # semi-leptonic ttbar
 
-    # W+ -> mu+ vm 
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/wpbb_mu_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/wpbb_mu_background',
-        proc_card_file='cards/background_processes/proc_card_wpbb_mu.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
-
-    # W+ -> e+ ve 
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/wpbb_e_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/wpbb_e_background',
-        proc_card_file='cards/background_processes/proc_card_wpbb_e.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
-
-    # W- -> mu- vm~
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/wmbb_mu_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/wmbb_mu_background',
-        proc_card_file='cards/background_processes/proc_card_wmbb_mu.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
-
-    # W- -> e- ve~
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/wmbb_e_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/wmbb_e_background',
-        proc_card_file='cards/background_processes/proc_card_wmbb_e.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
-
-    # tb production, divided by top (W) charge and W decay channel
-
-    # t+, W+ -> mu+ vm 
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/tpb_mu_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/tpb_mu_background',
-        proc_card_file='cards/background_processes/proc_card_tpb_mu.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
-
-    # t+, W+ -> e+ ve 
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/tpb_e_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/tpb_e_background',
-        proc_card_file='cards/background_processes/proc_card_tpb_e.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
-
-    # t-, W- -> mu- vm~ 
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/tmb_mu_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/tmb_mu_background',
-        proc_card_file='cards/background_processes/proc_card_tmb_mu.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
-
-    # t-, W- -> e- ve~
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/tmb_e_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/tmb_e_background',
-        proc_card_file='cards/background_processes/proc_card_tmb_e.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
-
-    # semi-leptonic ttbar production, divided in possible decay channels
-
-    # W+ -> mu+ vm, W- -> j j 
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/tt_mupjj_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/tt_mupjj_background',
-        proc_card_file='cards/background_processes/proc_card_tt_mupjj.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
-
-    # W+ -> e+ ve, W- -> j j 
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/tt_epjj_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/tt_epjj_background',
-        proc_card_file='cards/background_processes/proc_card_tt_epjj.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
-
-    # W+ -> j j, W- -> mu- vm~ 
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/tt_mumjj_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/tt_mumjj_background',
-        proc_card_file='cards/background_processes/proc_card_tt_mumjj.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
-
-    # W+ -> j j, W- -> e- ve~
-    miner.run(
-        mg_directory=args.mg_dir,
-        log_directory=f'{args.main_dir}/logs/tt_emjj_background',
-        mg_process_directory=f'{args.main_dir}/background_samples/tt_emjj_background',
-        proc_card_file='cards/background_processes/proc_card_tt_emjj.dat',
-        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-        pythia8_card_file=args.pythia_card if args.do_pythia else None,
-        run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-        sample_benchmark='sm',
-        initial_command=init_command,
-        is_background=True,
-        only_prepare_script=args.prepare_scripts
-    )
+    for sample in samples:
     
+        miner.run(
+            mg_directory=args.mg_dir,
+            log_directory=f'{args.main_dir}/logs/{sample}_background',
+            mg_process_directory=f'{args.main_dir}/background_samples/{sample}_background',
+            proc_card_file=f'cards/background_processes/proc_card_{sample}.dat',
+            param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
+            pythia8_card_file='cards/pythia8_card.dat' if args.do_pythia else None,
+            run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
+            sample_benchmark='sm',
+            initial_command=args.init_command,
+            is_background=True,
+            only_prepare_script=args.prepare_scripts
+        )
+
     os.remove('/tmp/generate.mg5')
