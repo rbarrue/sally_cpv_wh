@@ -59,7 +59,9 @@ if __name__ == "__main__":
     )
 
     # Only want the SM benchmark specifically - let Madminer choose the others
-    miner.add_benchmark({'cHWtil':0.000000},'sm')
+    miner.add_benchmark({'cHWtil':0.00},'sm')
+    miner.add_benchmark({'cHWtil':1.15},'pos_chwtil')
+    miner.add_benchmark({'cHWtil':-1.035},'neg_chwtil')
 
     # Morphing - automatic optimization to avoid large weights
     miner.set_morphing(max_overall_power=2,include_existing_benchmarks=True)
