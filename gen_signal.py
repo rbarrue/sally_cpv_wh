@@ -63,6 +63,9 @@ if __name__ == "__main__":
 
     parser.add_argument('--init_command',help='Initial command to be ran before generation (for e.g. setting environment variables)',default=None)
 
+    # to speed up sample production, but need to check for inconsistencies when doing the analysis later
+    parser.add_argument('--split_gen_rw',help='Split the generation and reweighting steps',action='store_true',default=False)
+
     args=parser.parse_args()
 
     # Load morphing setup file
@@ -98,23 +101,24 @@ if __name__ == "__main__":
             param_card_template_file=param_card_template_file,
             pythia8_card_file='cards/pythia8_card.dat' if args.do_pythia else None,
             sample_benchmark='sm',
-            is_background = True, # no reweighting here (doing MG5+Pythia first on the samples, reweighting later)
+            is_background = args.split_gen_rw,
             run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
             initial_command=args.init_command,
             only_prepare_script=args.prepare_scripts
         )
-
-        miner.reweight_existing_sample(
-            mg_process_directory=f'{args.main_dir}/signal_samples/{sample}_smeftsim_SM',
-            run_name='run_01',
-            sample_benchmark='sm',
-            # going around the fact that the automatized implementation of reweight_benchmarks needs fixing (later)
-            reweight_benchmarks=remove_element(list_benchmarks,'sm'), 
-            param_card_template_file=param_card_template_file,
-            initial_command=args.init_command,
-            only_prepare_script=args.prepare_scripts,
-            log_directory=f'{args.main_dir}/logs/{sample}_smeftsim_SM_reweight',
-        )
+        
+        if args.split_gen_rw:
+            miner.reweight_existing_sample(
+                mg_process_directory=f'{args.main_dir}/signal_samples/{sample}_smeftsim_SM',
+                run_name='run_01',
+                sample_benchmark='sm',
+                # going around the fact that the automatized implementation of reweight_benchmarks needs fixing (later)
+                reweight_benchmarks=remove_element(list_benchmarks,'sm'), 
+                param_card_template_file=param_card_template_file,
+                initial_command=args.init_command,
+                only_prepare_script=args.prepare_scripts,
+                log_directory=f'{args.main_dir}/logs/{sample}_smeftsim_SM_reweight',
+            )
 
         # BSM samples with MG (re)weights of other benchmarks (inc. SM)
         if args.generate_BSM:
@@ -126,24 +130,25 @@ if __name__ == "__main__":
                 param_card_template_file=param_card_template_file,
                 pythia8_card_file='cards/pythia8_card.dat' if args.do_pythia else None,
                 sample_benchmarks=remove_element(list_benchmarks,'sm'),
-                is_background = True, # no reweighting here (doing MG5+Pythia first on the samples, reweighting later)
+                is_background = args.split_gen_rw,
                 run_card_files=['cards/run_card_50k_WHMadminerCuts.dat'],
                 initial_command=args.init_command,
                 only_prepare_script=args.prepare_scripts
             )
 
-            for i_benchmark,benchmark in enumerate(list_benchmarks,start=1):
-                run_number = f'0{i_benchmark}' if i_benchmark < 10 else str(i_benchmark)
-                miner.reweight_existing_sample(
-                    mg_process_directory=f'{args.main_dir}/signal_samples/{sample}_smeftsim_BSM',
-                    run_name=f'run_{run_number}',
-                    sample_benchmark=benchmark,
-                    reweight_benchmarks=remove_element(list_benchmarks,benchmark), 
-                    param_card_template_file=param_card_template_file,
-                    initial_command=args.init_command,
-                    only_prepare_script=args.prepare_scripts,
-                    log_directory=f'{args.main_dir}/logs/{sample}_smeftsim_BSM_reweight',
-                )
+            if args.split_gen_rw:
+                for i_benchmark,benchmark in enumerate(list_benchmarks,start=1):
+                    run_number = f'0{i_benchmark}' if i_benchmark < 10 else str(i_benchmark)
+                    miner.reweight_existing_sample(
+                        mg_process_directory=f'{args.main_dir}/signal_samples/{sample}_smeftsim_BSM',
+                        run_name=f'run_{run_number}',
+                        sample_benchmark=benchmark,
+                        reweight_benchmarks=remove_element(list_benchmarks,benchmark), 
+                        param_card_template_file=param_card_template_file,
+                        initial_command=args.init_command,
+                        only_prepare_script=args.prepare_scripts,
+                        log_directory=f'{args.main_dir}/logs/{sample}_smeftsim_BSM_reweight',
+                    )
 
 
     os.remove('/tmp/generate.mg5')
