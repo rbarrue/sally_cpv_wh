@@ -17,21 +17,14 @@ Ricardo Barrué (LIP/IST/CERN-ATLAS), 3/8/2023
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
-from math import cos, sqrt, fabs
-import matplotlib
-from matplotlib import pyplot as plt
-import os,sys
+from math import sqrt, fabs
+
+import os
 
 import argparse as ap
 
-#import madminer
-#from madminer import *
-from madminer.core import MadMiner
 from madminer.lhe import LHEReader
-from madminer.sampling import combine_and_shuffle
-from madminer.plotting import plot_distributions
 from madminer.utils.particle import MadMinerParticle
-from madminer.utils.interfaces.hdf5 import load_madminer_settings
 import vector
 
 # MadMiner output
@@ -84,6 +77,9 @@ list_of_observables = [
 # calculation similar to what is done in the ATLAS VHbb analyses (getNeutrinoPz function in AnalysisReader.cxx)
 def get_neutrino_pz(particles=[],leptons=[],photons=[],jets=[],met=None,debug=False):
 
+  if (met is None) or leptons==[] or jets==[]:
+      raise TypeError("one of the required inputs of wrong type (not found)")
+  
   # W boson mass (GeV)
   m_w=80.379
   
@@ -129,9 +125,9 @@ def get_neutrino_pz(particles=[],leptons=[],photons=[],jets=[],met=None,debug=Fa
   w_candidate_1_betaZ=w_candidate_1.to_beta3().z
   w_candidate_2_betaZ=w_candidate_2.to_beta3().z
   """
-  h_candidate_betaZ=h_candidate.pz/np.sqrt(h_candidate.pz+h_candidate.M2) 
-  w_candidate_1_betaZ=w_candidate_1.pz/np.sqrt(w_candidate_1.pz+w_candidate_1.M2) 
-  w_candidate_2_betaZ=w_candidate_2.pz/np.sqrt(w_candidate_2.pz+w_candidate_2.M2) 
+  h_candidate_betaZ=h_candidate.pz/np.sqrt(pow(h_candidate.pz,2)+h_candidate.M2) 
+  w_candidate_1_betaZ=w_candidate_1.pz/np.sqrt(pow(w_candidate_1.pz,2)+w_candidate_1.M2) 
+  w_candidate_2_betaZ=w_candidate_2.pz/np.sqrt(pow(w_candidate_2.pz,2)+w_candidate_2.M2) 
 
   
   if debug:
@@ -293,7 +289,7 @@ def get_deltaphi_lv(particles=[],leptons=[],photons=[],jets=[],met=None,debug=Fa
   return deltaphi_lv
 
 # Function to process the events, run on each separate data sample
-def process_events(event_path, setup_file_path,output_file_path,is_background_process=False,is_SM=True):
+def process_events(event_path, setup_file_path, output_file_path, is_background_process=False, is_SM=True):
 
     # Load Madminer setup
     lhe = LHEReader(setup_file_path)

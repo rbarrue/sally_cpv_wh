@@ -1,2 +1,4 @@
 models/
 py.py
+*.out
+*.pyc
