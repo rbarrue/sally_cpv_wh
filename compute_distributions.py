@@ -700,9 +700,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
 
-    parser.add_argument('--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',choices=['signalOnly_SMonly_noSysts_lhe','signalOnly_noSysts_lhe','withBackgrounds_SMonly_noSysts_lhe','withBackgrounds_noSysts_lhe'],default='signalOnly_SMonly_noSysts_lhe')
-
-    parser.add_argument('--observable_set',help="which observable sets to process in one run: full (including unobservable degrees of freedom) or met (only observable degrees of freedom)",choices=['full','met'],default='met')
+    parser.add_argument('--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',choices=['signalOnly_SMonly','signalOnly','withBackgrounds_SMonly','withBackgrounds'],default='signalOnly') # to stay like this until we reimplement the BSM sample features in the other scripts
         
     parser.add_argument('--channel',help='lepton+charge flavor channels to plot.',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],default=['wh'],nargs="+")
 
@@ -727,13 +725,14 @@ if __name__ == '__main__':
     args=parser.parse_args()
 
     # Partition to store h5 files and samples + path to setup file
-    main_proc_dir = f'{args.main_dir}/{args.observable_set}'
-    main_plot_dir = f'{args.main_dir}/plots/{args.observable_set}'
+    main_proc_dir = f'{args.main_dir}/'
+    main_plot_dir = f'{args.main_dir}/plots/'
 
     os.makedirs(f'{main_plot_dir}/',exist_ok=True)
 
     obs_xlabel_dict={
         'pt_w':r'$p_T^W ~ [GeV]$',
+        #'pt_l':r'$p_T^\ell ~ [GeV]$',
         'mt_tot':r'$m_T^{\ell \nu b \bar{b}} ~ [GeV]$',
         'pz_nu':r'$p_z^{\nu}$',
         'cos_deltaPlus':r'$\cos \delta^+$',
@@ -765,21 +764,23 @@ if __name__ == '__main__':
             
             histo_observables=plot_distributions_split_backgrounds(filename=f'{main_proc_dir}/{channel}_{args.sample_type}.h5',
             parameter_points=None,
-            filename_bkgonly=f'{main_proc_dir}/{channel}_backgroundOnly_noSysts_lhe.h5',
+            filename_bkgonly=f'{main_proc_dir}/{channel}_backgroundOnly.h5',
             observables=args.observables,
-            observable_labels=[obs_xlabel_dict[obs] for obs in args.observables] if args.observables!= None else None,
+            observable_labels=[obs_xlabel_dict[obs] if obs in obs_xlabel_dict else obs for obs in args.observables] if args.observables!= None else None,
+            line_labels=['SM',r'$c_\tilde{HW} = 1.15$',r'$c_\tilde{HW} = -1.035$'],
             log=args.do_log,
             line_labels_bkgs=['Backgrounds (SM)'],
             normalize=args.do_shape_only,n_bins=args.n_bins,uncertainties='None',
-            remove_negative_weights=args.remove_negative_weights,n_cols=len(args.observables) if args.observables!= None else 3)
+            remove_negative_weights=args.remove_negative_weights,n_cols=3)
 
             histo_observables.savefig(f'{main_plot_dir}/{channel}_{args.sample_type}{plot_stem}.pdf')
         
         else:
             
             histo_sally=plot_sally_distributions_split_backgrounds(filename=f'{main_proc_dir}/{channel}_{args.sample_type}.h5',
-            filename_bkgonly=f'{main_proc_dir}/{channel}_backgroundOnly_noSysts_lhe.h5',
-            model_path=f'{main_proc_dir}/models/{args.sally_model}/{args.sally_observables}/sally_ensemble_{channel}_{args.sample_type}',
+            filename_bkgonly=f'{main_proc_dir}/{channel}_backgroundOnly.h5',
+            model_path=f'{main_proc_dir}/models/{args.sally_observables}/{args.sally_model}/sally_ensemble_{channel}_{args.sample_type}',
+            line_labels=['SM',r'$c_\tilde{HW} = 1.15$',r'$c_\tilde{HW} = -1.035$'],
             normalize=args.do_shape_only,log=args.do_log)
             
             if args.do_shape_only:
@@ -787,7 +788,7 @@ if __name__ == '__main__':
             if args.do_log:
                 plot_stem+='_log'
 
-            histo_sally.savefig(f'{main_plot_dir}/sally_{channel}_{args.sample_type}_{args.sally_model}_{args.sally_observables}{plot_stem}.pdf')
+            histo_sally.savefig(f'{main_plot_dir}/sally_{channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}{plot_stem}.pdf')
 
-            histo_sally_losses=plot_sally_train_val_losses(f'{main_proc_dir}/models/{args.sally_model}/{args.sally_observables}/losses_{channel}_{args.sample_type}.npz')
-            histo_sally_losses.savefig((f'{main_plot_dir}/sally_losses_{channel}_{args.sample_type}_{args.sally_model}_{args.sally_observables}.pdf'))
+            histo_sally_losses=plot_sally_train_val_losses(f'{main_proc_dir}/models/{args.sally_observables}/{args.sally_model}/losses_{channel}_{args.sample_type}.npz')
+            histo_sally_losses.savefig((f'{main_plot_dir}/sally_losses_{channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}.pdf'))
