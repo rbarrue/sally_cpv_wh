@@ -12,9 +12,7 @@ Ricardo Barrué (LIP/IST/CERN-ATLAS), 3/8/2023
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import os
-import numpy as np
-import matplotlib
-from matplotlib import pyplot as plt
+import math
 
 from madminer.core import MadMiner
 from madminer.lhe import LHEReader
@@ -49,12 +47,13 @@ if __name__ == "__main__":
 
     parser.add_argument('--init_command',help='Initial command to be ran before generation (for e.g. setting environment variables)',default=None)
 
+    parser.add_argument('--nevents',help='number of total hard scattering events (for each background) to generate (Madgraph-level)',type=float,default=10e6)
+
     args=parser.parse_args()
 
     # Load morphing setup file
     miner = MadMiner()
     miner.load(f'{args.main_dir}/{args.setup_file}.h5')
-    lhe = LHEReader(f'{args.main_dir}/{args.setup_file}.h5')
 
     init_command=None
 
@@ -62,17 +61,18 @@ if __name__ == "__main__":
     samples+=['tpb_mu','tpb_e','tmb_mu','tmb_e'] # single top production (tb channel)
     samples+=['tt_mupjj','tt_epjj','tt_mumjj','tt_emjj'] # semi-leptonic ttbar
 
+    factor=math.ceil(args.nevents/1e6)
     for sample in samples:
     
-        miner.run(
+        miner.run_multiple(
             mg_directory=args.mg_dir,
             log_directory=f'{args.main_dir}/logs/{sample}_background',
             mg_process_directory=f'{args.main_dir}/background_samples/{sample}_background',
             proc_card_file=f'cards/background_processes/proc_card_{sample}.dat',
             param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
             pythia8_card_file='cards/pythia8_card.dat' if args.do_pythia else None,
-            run_card_file='cards/run_card_250k_WHMadminerCuts.dat',
-            sample_benchmark='sm',
+            run_card_files=['cards/run_card_250k_WHMadminerCuts.dat' for _ in range(factor)],
+            sample_benchmarks=['sm'],
             initial_command=args.init_command,
             is_background=True,
             only_prepare_script=args.prepare_scripts
