@@ -3,7 +3,7 @@
 """
 gen_signal.py
 
-Generates WH signal events WH(->l v b b~), divided by W decay channel and charge (250k events each)
+Generates WH signal events WH(->l v b b~), divided by W decay channel and charge (250k events/submission)
 
 Can use different morphing setups (default: CP-odd operator only).
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     parser.add_argument('--init_command',help='Initial command to be ran before generation (for e.g. setting environment variables)',default=None)
 
     # speeds up sample production, since reweighting can only run on multicore mode
-    parser.add_argument('--reweight_only',help='run reweighting only',action='store_true',default=False)
+    parser.add_argument('--reweight',help='if running reweighting alongside generation (doesnt work on multi-core mode)',action='store_true',default=False)
 
     parser.add_argument('--nevents',help='number of total hard scattering events to generate (Madgraph-level)',type=float,default=10e6)
 
@@ -101,32 +101,19 @@ if __name__ == "__main__":
         process_directory=f'{args.main_dir}/signal_samples/{sample}_smeftsim_SM'
         if os.path.exists(f'{process_directory}/Events'):
             logging.warning('folder with events already exists, skipping generation of Madgraph scripts')
-        elif not args.reweight_only:
-            miner.run_multiple(
-                mg_directory=args.mg_dir,
-                log_directory=f'{args.main_dir}/logs/{sample}_smeftsim_SM',
-                mg_process_directory=process_directory,
-                proc_card_file=f'cards/signal_processes/proc_card_{sample}_smeftsim.dat',
-                param_card_template_file=param_card_template_file,
-                pythia8_card_file='cards/pythia8_card.dat' if args.do_pythia else None,
-                sample_benchmarks=['sm'],
-                is_background = True,
-                run_card_files=['cards/run_card_250k_WHMadminerCuts.dat' for _ in range(factor)],
-                initial_command=args.init_command,
-                only_prepare_script=args.prepare_scripts
-            )
-        
-        if args.reweight_only:
-            for run in os.listdir(f'{process_directory}/Events'):
-                miner.reweight_existing_sample(
-                    mg_process_directory=f'{args.main_dir}/signal_samples/{sample}_smeftsim_SM',
-                    run_name=run,
-                    sample_benchmark='sm',
-                    reweight_benchmarks=remove_element(list_benchmarks,'sm'), 
-                    param_card_template_file=param_card_template_file,
-                    initial_command=args.init_command,
-                    only_prepare_script=args.prepare_scripts,
-                    log_directory=f'{args.main_dir}/logs/{sample}_smeftsim_SM_reweight',
-                )
+
+        miner.run_multiple(
+            mg_directory=args.mg_dir,
+            log_directory=f'{args.main_dir}/logs/{sample}_smeftsim_SM',
+            mg_process_directory=process_directory,
+            proc_card_file=f'cards/signal_processes/proc_card_{sample}_smeftsim.dat',
+            param_card_template_file=param_card_template_file,
+            pythia8_card_file='cards/pythia8_card.dat' if args.do_pythia else None,
+            sample_benchmarks=['sm'],
+            is_background = not args.reweight,
+            run_card_files=['cards/run_card_250k_WHMadminerCuts.dat' for _ in range(factor)],
+            initial_command=args.init_command,
+            only_prepare_script=args.prepare_scripts
+        )
 
     os.remove('/tmp/generate.mg5')
