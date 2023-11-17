@@ -698,27 +698,27 @@ if __name__ == '__main__':
     
     parser = ap.ArgumentParser(description='Computes distributions of different variables for signal and backgrounds.',formatter_class=ap.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
+    parser.add_argument('-dir','--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
 
-    parser.add_argument('--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',choices=['signalOnly_SMonly','signalOnly','withBackgrounds_SMonly','withBackgrounds'],default='signalOnly') # to stay like this until we reimplement the BSM sample features in the other scripts
+    parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',choices=['signalOnly_SMonly','signalOnly','withBackgrounds_SMonly','withBackgrounds'],default='signalOnly') # to stay like this until we reimplement the BSM sample features in the other scripts
         
-    parser.add_argument('--channel',help='lepton+charge flavor channels to plot.',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],default=['wh'],nargs="+")
+    parser.add_argument('-c','--channel',help='lepton+charge flavor channels to plot.',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],default=['wh'],nargs="+")
 
-    parser.add_argument('--observables',help='which of the observables to plot. If None, plots all the observables in the file.',nargs="*",default=None)
+    parser.add_argument('-o','--observables',help='which of the observables to plot. If None, plots all the observables in the file.',nargs="*",default=None)
 
-    parser.add_argument('--plot_sally',help='whether to plot the distribution of the output of SALLY. uses all the weighted events in the given sample.',default=False,action='store_true')
+    parser.add_argument('-sally','--plot_sally',help='whether to plot the distribution of the output of SALLY. uses all the weighted events in the given sample.',default=False,action='store_true')
 
-    parser.add_argument('--sally_observables',help='which of the SALLY training input variable set models to use',required='sally' in sys.argv)
+    parser.add_argument('-so','--sally_observables',help='which of the SALLY training input variable set models to use',required='sally' in sys.argv)
 
-    parser.add_argument('--sally_model',help='which of the SALLY models (for each of the input variable configurations) to use.',required='sally' in sys.argv)
+    parser.add_argument('-sm','--sally_model',help='which of the SALLY models (for each of the input variable configurations) to use.',required='sally' in sys.argv)
 
-    parser.add_argument('--do_shape_only',help='whether or not to do shape-only plots.',default=False,action='store_true')
+    parser.add_argument('-shape','--do_shape_only',help='whether or not to do shape-only plots.',default=False,action='store_true')
 
-    parser.add_argument('--do_log',help='do plots in log scale',default=False,action='store_true')
+    parser.add_argument('-log','--do_log',help='do plots in log scale',default=False,action='store_true')
 
-    parser.add_argument('--n_bins',help='number of evenly spaced bins in the histogram',type=int,default=20)
+    parser.add_argument('-nb','--n_bins',help='number of evenly spaced bins in the histogram',type=int,default=20)
 
-    parser.add_argument('--plot_stem',help='string to add to end of the observable plot name.',default='')
+    parser.add_argument('-stem','--plot_stem',help='string to add to end of the observable plot name.',default='')
 
     parser.add_argument('--remove_negative_weights',help='removes events with negative weights from entering the plot',default=False,action='store_true')
 
