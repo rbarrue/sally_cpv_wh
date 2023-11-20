@@ -50,7 +50,7 @@ def plot_distributions_split_backgrounds(
     observable_labels=None,
     n_bins=50,
     line_labels=None,
-    line_labels_bkgs=None,
+    line_labels_bkgs=['Backgrounds (SM)'],
     colors=None,
     linestyles=None,
     linewidths=1.5,
@@ -212,7 +212,7 @@ def plot_distributions_split_backgrounds(
         line_labels = parameter_points
     
     if line_labels_bkgs is None:
-        line_labels_bkgs=[f"backgrounds({parameter_point})" for parameter_point in parameter_points_bkgs]
+        line_labels_bkgs=[f"Backgrounds ({parameter_point})" for parameter_point in parameter_points_bkgs]
 
     line_labels=[*line_labels,*line_labels_bkgs]
 
@@ -583,7 +583,7 @@ def plot_distributions_split_backgrounds(
 
     return fig
 
-def plot_sally_distributions_split_backgrounds(filename,filename_bkgonly,model_path,sally_component=0,n_bins=50,normalize=True,parameter_points=None,parameter_points_bkgs=['sm'],line_labels=None,line_labels_bkgs=['Backgrounds (SM)'],log=False,sample_only_from_closest_benchmark=True,colors=None,linestyles=None,linewidths=1.5):
+def plot_sally_distributions_split_backgrounds(filename,filename_bkgonly,model_path,sally_component=0,n_bins=50,normalize=True,parameter_points=None,parameter_points_bkgs=['sm'],line_labels=None,line_labels_bkgs=['Backgrounds (SM)'],log=False,colors=None,linestyles=None,linewidths=1.5,quantiles_for_range=(0.01, 0.99)):
 
     score_estimator=Ensemble()
     score_estimator.load(model_path)
@@ -627,13 +627,18 @@ def plot_sally_distributions_split_backgrounds(filename,filename_bkgonly,model_p
 
     histos=[]
 
+    logging.info('Plotting only events in the test partition')
     for parameter_point in parameter_points:
-        x,weights=sa.weighted_events(theta=parameter_point)
+        start_event_test, end_event_test, correction_factor_test = sa._train_validation_test_split('test',validation_split=0.2,test_split=0.2)
+        x,weights=sa.weighted_events(theta=parameter_point,start_event=start_event_test,end_event=end_event_test)
+        weights*=correction_factor_test # scale the events by the correction factor
         t_hat,_=score_estimator.evaluate_score(x=x)
+        xmin = weighted_quantile(t_hat[:,sally_component], quantiles_for_range[0], weights)
+        xmax = weighted_quantile(t_hat[:,sally_component], quantiles_for_range[1], weights)
         histo,bin_edges=np.histogram(
                     t_hat[:,sally_component],
                     bins=n_bins,
-                    range=(-2.0,2.0),
+                    range=(xmin,xmax),
                     weights=weights,
                     density=normalize,
                 )
@@ -642,12 +647,16 @@ def plot_sally_distributions_split_backgrounds(filename,filename_bkgonly,model_p
         histos.append(histo)
 
     for parameter_point in parameter_points_bkgs:
-        x_bkgs,weights_bkg=sa_bkgs.weighted_events(theta=parameter_point)
+        start_event_test, end_event_test, correction_factor_test = sa_bkgs._train_validation_test_split('test',validation_split=0.2,test_split=0.2)
+        x_bkgs,weights_bkg=sa_bkgs.weighted_events(theta=parameter_point,start_event=start_event_test,end_event=end_event_test)
+        weights_bkg*=correction_factor_test # scale the events by the correction factor
         t_hat_bkg,_ = score_estimator.evaluate_score(x=x_bkgs)
+        xmin = weighted_quantile(t_hat_bkg[:,sally_component], quantiles_for_range[0], weights_bkg)
+        xmax = weighted_quantile(t_hat_bkg[:,sally_component], quantiles_for_range[1], weights_bkg)
         histo,bin_edges=np.histogram(
             t_hat_bkg[:,sally_component],
             bins=n_bins,
-            range=(-2.0,2.0),
+            range=(xmin,xmax),
             weights=weights_bkg,
             density=normalize,
         )
@@ -671,7 +680,9 @@ def plot_sally_distributions_split_backgrounds(filename,filename_bkgonly,model_p
     else:
         plt.ylabel(r"$\frac{d\sigma}{dx}$ [pb / bin]")
     
-    plt.xlim(-3.0,3.0)
+    xmin_plot = xmin*1.2 if xmin < 0 else xmin/1.2
+    xmax_plot = xmax*1.2 if xmax > 0 else xmax/1.2
+    plt.xlim(xmin_plot,xmax_plot)
 
     plt.legend()
     plt.tight_layout()
@@ -700,9 +711,9 @@ if __name__ == '__main__':
 
     parser.add_argument('-dir','--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
 
-    parser.add_argument('-plotdir','--plot_dir',help='folder where to save plots to',required=True)
+    parser.add_argument('-pdir','--plot_dir',help='folder where to save plots to',required=True)
 
-    parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',choices=['signalOnly_SMonly','signalOnly','withBackgrounds_SMonly','withBackgrounds'],default='signalOnly') # to stay like this until we reimplement the BSM sample features in the other scripts
+    parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',choices=['signalOnly_SMonly','signalOnly','withBackgrounds_SMonly','withBackgrounds','backgroundOnly'],default='signalOnly') # to stay like this until we reimplement the BSM sample features in the other scripts
         
     parser.add_argument('-c','--channel',help='lepton+charge flavor channels to plot.',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],default=['wh'],nargs="+")
 
@@ -724,6 +735,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--remove_negative_weights',help='removes events with negative weights from entering the plot',default=False,action='store_true')
 
+    parser.add_argument('-l','--plot_losses',help='plots losses',default=False,action='store_true')
+
     args=parser.parse_args()
 
     os.makedirs(f'{args.plot_dir}/',exist_ok=True)
@@ -738,6 +751,9 @@ if __name__ == '__main__':
         'ql_cos_deltaPlus':r'$Q_{\ell} ~\cos \delta^+$',
         'ql_cos_deltaMinus':r'$Q_{\ell} ~\cos \delta^-$',
     }
+
+    if args.sample_type=='backgroundOnly':
+        logging.warning("Plotting only background distributions")
 
     for channel in args.channel:
 
@@ -761,13 +777,13 @@ if __name__ == '__main__':
                 plot_stem+='_log'
             
             histo_observables=plot_distributions_split_backgrounds(filename=f'{args.main_dir}/{channel}_{args.sample_type}.h5',
-            parameter_points=None,
+            parameter_points=None if args.sample_type!='backgroundOnly' else [],
             filename_bkgonly=f'{args.main_dir}/{channel}_backgroundOnly.h5',
             observables=args.observables,
             observable_labels=[obs_xlabel_dict[obs] if obs in obs_xlabel_dict else obs for obs in args.observables] if args.observables!= None else None,
-            line_labels=['SM',r'$c_\tilde{HW} = 1.15$',r'$c_\tilde{HW} = -1.035$'],
+            line_labels=['SM',r'$c_\tilde{HW} = 1.15$',r'$c_\tilde{HW} = -1.035$'] if args.sample_type!='backgroundOnly' else [],
             log=args.do_log,
-            line_labels_bkgs=['Backgrounds (SM)'],
+            linestyles=None if args.sample_type!='backgroundOnly' else ['dashdot'],
             normalize=args.do_shape_only,n_bins=args.n_bins,uncertainties='None',
             remove_negative_weights=args.remove_negative_weights,n_cols=3)
 
@@ -776,9 +792,11 @@ if __name__ == '__main__':
         else:
             
             histo_sally=plot_sally_distributions_split_backgrounds(filename=f'{args.main_dir}/{channel}_{args.sample_type}.h5',
+            parameter_points=None if args.sample_type!='backgroundOnly' else [],
             filename_bkgonly=f'{args.main_dir}/{channel}_backgroundOnly.h5',
             model_path=f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/sally_ensemble_{channel}_{args.sample_type}',
-            line_labels=['SM',r'$c_\tilde{HW} = 1.15$',r'$c_\tilde{HW} = -1.035$'],
+            line_labels=['SM',r'$c_\tilde{HW} = 1.15$',r'$c_\tilde{HW} = -1.035$'] if args.sample_type!='backgroundOnly' else [],
+            linestyles=None if args.sample_type!='backgroundOnly' else ['dashdot'],
             normalize=args.do_shape_only,log=args.do_log)
             
             if args.do_shape_only:
@@ -788,5 +806,6 @@ if __name__ == '__main__':
 
             histo_sally.savefig(f'{args.plot_dir}/sally_{channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}{plot_stem}.pdf')
 
-            histo_sally_losses=plot_sally_train_val_losses(f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/losses_{channel}_{args.sample_type}.npz')
-            histo_sally_losses.savefig((f'{args.plot_dir}/sally_losses_{channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}.pdf'))
+            if args.plot_losses:
+                histo_sally_losses=plot_sally_train_val_losses(f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/losses_{channel}_{args.sample_type}.npz')
+                histo_sally_losses.savefig((f'{args.plot_dir}/sally_losses_{channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}.pdf'))
