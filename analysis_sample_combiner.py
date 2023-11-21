@@ -131,7 +131,7 @@ if __name__ == "__main__":
           f'{args.main_dir}/wh_{flavor}_signalOnly.h5'
         )
 
-      if args.do_background:
+      if args.do_backgrounds:
         combine_and_shuffle([
           f'{args.main_dir}/wph_{flavor}_backgroundOnly.h5',
           f'{args.main_dir}/wmh_{flavor}_backgroundOnly.h5'],
