@@ -68,7 +68,8 @@ if __name__ == "__main__":
       for sample in signal_samples:
         event_folder = f'{args.main_dir}/signal_samples/{sample}_smeftsim_SM/Events'
         list_samples_to_combine = [f'{event_folder}/{run}/analysed_events.h5' for run in os.listdir(event_folder)]
-        combine_and_shuffle(list_samples_to_combine,f'{args.main_dir}/{sample}_signalOnly.h5')
+        logging.warning(f'found {len(list_samples_to_combine)} runs for {sample}. weighting each by the inverse of the number of runs')
+        combine_and_shuffle(list_samples_to_combine,f'{args.main_dir}/{sample}_signalOnly.h5',k_factors=1.0/len(list_samples_to_combine))
   
     if args.do_backgrounds:
       background_samples=[f't{charge}b_{flavor}' for (flavor,charge) in flavor_charge_combinations]
@@ -78,7 +79,8 @@ if __name__ == "__main__":
       for sample in background_samples:
         event_folder = f'{args.main_dir}/background_samples/{sample}_background/Events'
         list_samples_to_combine = [f'{event_folder}/{run}/analysed_events.h5' for run in os.listdir(event_folder)]
-        combine_and_shuffle(list_samples_to_combine,f'{args.main_dir}/background_samples/{sample}_background.h5')
+        logging.warning(f'found {len(list_samples_to_combine)} runs for {sample}. weighting each by the inverse of the number of runs')
+        combine_and_shuffle(list_samples_to_combine,f'{args.main_dir}/background_samples/{sample}_background.h5',k_factors=1.0/len(list_samples_to_combine))
 
       for (flavor,charge) in flavor_charge_combinations:
         combine_and_shuffle([
