@@ -65,8 +65,13 @@ def augment_and_train(input_dir,sample_name,nevents=-1,training_observables='kin
   # access to the .h5 file with MadMiner settings
   madminer_settings=load_madminer_settings(f'{input_dir}/{sample_name}.h5',include_nuisance_benchmarks=False)
 
+  nevents_file=madminer_settings[6]
   if nevents==-1:
-    nevents=madminer_settings[6]
+    logging.info('number of events not given as input. of events in file, using 80% for training+validation, 20% for testing.')
+    nevents=nevents_file
+
+  if nevents > nevents_file:
+    logging.warning(f'number of events in file ({nevents_file}) is smaller than the number of events requested ({nevents}). Will use number of events in the file.')
 
   logging.info(f'running mode: {mode}; sample_name: {sample_name}; training observables: {training_observables}; nevents: {nevents}')
 
@@ -83,10 +88,12 @@ def augment_and_train(input_dir,sample_name,nevents=-1,training_observables='kin
     sampler=SampleAugmenter(f'{input_dir}/{sample_name}.h5')
 
     # Creates a set of training data (as many as the number of estimators) - centered around the SM
+    # training/validation data separated internally in the training code, 20% used for test
     for i_estimator in range(nestimators):
       _,_,_,eff_n_samples = sampler.sample_train_local(theta=sampling.benchmark('sm'),
-                                        n_samples=int(nevents),
+                                        n_samples=int(min(nevents,nevents_file*0.8)),
                                         folder=f'{input_dir}/training_samples/',
+                                        validation_split=None,
                                         filename=f'train_score_{sample_name}_{i_estimator}')
     
     logging.info(f'effective number of samples for estimator {i_estimator}: {eff_n_samples}')
@@ -118,7 +125,7 @@ def augment_and_train(input_dir,sample_name,nevents=-1,training_observables='kin
     result = ensemble.train_all(method='sally',
       x=[f'{input_dir}/training_samples/x_train_score_{sample_name}_{i_estimator}.npy' for i_estimator in range(nestimators)],
       t_xz=[f'{input_dir}/training_samples/t_xz_train_score_{sample_name}_{i_estimator}.npy' for i_estimator in range(nestimators)],
-      memmap=True,verbose="none",n_workers=4,limit_samplesize=nevents,n_epochs=50,batch_size=1024,
+      memmap=True,verbose="none",n_workers=4,limit_samplesize=int(min(nevents,nevents_file*0.8)),n_epochs=50,batch_size=1024,
     )    
 
     # saving ensemble state dict and training and validation losses
