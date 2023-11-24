@@ -36,8 +36,7 @@ for key in logging.Logger.manager.loggerDict:
   if "madminer" not in key:
     logging.getLogger(key).setLevel(logging.WARNING)
 
-# aux function to plot the likelihood ratio
-def plot_likelihood(parameter_grid,llr,xlabel,ylabel,do_log):
+def plot_likelihood_ratio(parameter_grid,llr,xlabel,ylabel,do_log):
 
   fig = plt.figure()
 
@@ -76,19 +75,35 @@ def get_thetas_eval(theta_min,theta_max,spacing):
   return thetas_eval
 
 # get indices of likelihood histograms to plot for a single coefficient
-def get_indices_llr_histograms(parameter_grid,npoints_plotting,plot_parameter_spacing=None):
+def get_indices_llr_histograms(parameter_grid,npoints_plotting,plot_parameter_spacing=None,index_best_point=None):
   
   if plot_parameter_spacing is not None:
-    npoints_plotting=int((parameter_grid[0,0]-parameter_grid[0,-1])/plot_parameter_spacing)
-
-  indices = [int(i * len(parameter_grid)/npoints_plotting) for i in range(min(npoints_plotting,len(parameter_grid)))]
+    npoints_plotting=int((parameter_grid[0,0]-parameter_grid[-1,0])/plot_parameter_spacing)
   
-  sm_point_index=np.setdiff1d(range(len(parameter_grid)),np.nonzero(parameter_grid)[0])[0]
+  if npoints_plotting>len(parameter_grid):
+    logging.warning('asking for more points than what the parameter grid has, will plot all points')
+    npoints_plotting=len(parameter_grid)
+  
+  # span the entire parameter grid
+  if index_best_point is None:
+    indices = list(range(0,len(parameter_grid),len(parameter_grid)/npoints_plotting))
+  # span a small region around the best fit point
+  else:
+    indices = list(range(max(0,index_best_point-int(npoints_plotting/2)),min(len(parameter_grid),index_best_point+int(npoints_plotting/2))))
+  
+  # make sure that the SM point is always included
+  sm_point_index=np.where(parameter_grid==[0.0])[0][0] # 1D case
   if sm_point_index not in indices:
-    indices=indices[1:]
     indices.append(sm_point_index)
-  
-  return indices
+
+  return list(indices)
+
+def get_minmax_y_histograms(histos,epsilon=0.02):
+
+  min_value=np.min([np.min(histo.histo) for histo in histos])*(1-epsilon)
+  max_value=np.max([np.max(histo.histo) for histo in histos])*(1+epsilon)
+
+  return (min_value,max_value)
 
 if __name__ == "__main__":
 
@@ -122,6 +137,8 @@ if __name__ == "__main__":
 
   parser.add_argument('-nf','--n_fits',help='number of times to shuffle the input dataset and redo the fit',type=int,default=1)
 
+  parser.add_argument('-l','--lumi',help='process charge+flavor inclusive samples',type=int,default=300.)    
+
   parser.add_argument('-dbg','--debug',help='turns on debug functions',default=False,action='store_true')
 
   args=parser.parse_args()
@@ -134,16 +151,17 @@ if __name__ == "__main__":
   else:
     hist_vars=[args.observable_x,args.observable_y]
     hist_bins=[args.binning_x,args.binning_y] if (args.binning_x is not None and args.binning_y is not None) else None
-  logging.debug(hist_vars,hist_bins)
+  
+  logging.debug(f'hist variables: {str(hist_vars)}; hist bins: {str(hist_bins)}')
 
   #for sample_type in args.sample_type:
   logging.info(f"sample type: {args.sample_type}")
   list_central_values=[]
 
   if 'sally' in args.mode:
-    log_file_path=f"{args.plot_dir}/limits/full_sally_{args.sample_type}"  
+    log_file_path=f"{args.plot_dir}/limits/full_sally_{args.sample_type}_lumi{args.lumi}"  
   else:
-    log_file_path=f"{args.plot_dir}/limits/full_histograms_{args.sample_type}"
+    log_file_path=f"{args.plot_dir}/limits/full_histograms_{args.sample_type}_lumi{args.lumi}"
 
   if args.shape_only:
     log_file_path += '_shape_only'
@@ -166,21 +184,23 @@ if __name__ == "__main__":
         f'{args.main_dir}/{args.channel}_{args.sample_type}_shuffled.h5',recalculate_header=False)
       limits_file=AsymptoticLimits(f'{args.main_dir}/{args.channel}_{args.sample_type}_shuffled.h5')
 
-    parameter_grid,p_values,index_best_point,llr_kin,ll_rate,(histos, observed, observed_weights)=limits_file.expected_limits(mode=args.mode,theta_true=[0.0],
-    include_xsec=not args.shape_only,
+    parameter_grid,p_values,index_best_point,llr_kin,llr_rate,(histos, observed, observed_weights)=limits_file.expected_limits(
+    mode=args.mode,theta_true=[0.0], include_xsec=not args.shape_only,
     model_file=f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/sally_ensemble_{args.channel}_{args.sample_type}' if 'sally' in args.mode else None,
     hist_vars=hist_vars if 'histo' in args.mode else None,
     hist_bins=hist_bins,
-    return_asimov=True,n_histo_toys=None,
+    luminosity=args.lumi*1000.0,
+    return_asimov=True,test_split=0.5,n_histo_toys=None,
     grid_ranges=[(-1.2,1.2)],grid_resolutions=[101])
     #thetas_eval=thetas_eval,grid_resolutions=None) # can be set given min, max and spacing using the get_thetas_eval funcion
 
+    logging.debug(f'parameter grid: {parameter_grid}')
     if i%5==0:
 
-      # plotting the likelihood histograms for debugging
+      # plotting a subset of the likelihood histograms for debugging
       if args.debug:
         
-        indices=get_indices_llr_histograms(parameter_grid,npoints_plotting=8)
+        indices=get_indices_llr_histograms(parameter_grid,npoints_plotting=4,index_best_point=index_best_point)
 
         likelihood_histograms = plot_histograms(
             histos=[histos[i] for i in indices],
@@ -189,29 +209,26 @@ if __name__ == "__main__":
             histo_labels=[f"$cHWtil = {parameter_grid[i,0]:.2f}$" for i in indices],
             xlabel=args.observable_x,
             xrange=(hist_bins[0][0],hist_bins[0][-1]) if hist_bins is not None else None,
+            yrange=get_minmax_y_histograms([histos[i] for i in indices],epsilon=0.05) ,
             log=args.do_log,
         )
         if 'sally' in args.mode:
-          likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_{i}.pdf')
+          likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{i}.pdf')
         else:
           if args.observable_y is None:
-            likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{i}.pdf')
+            likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_lumi{args.lumi}_{i}.pdf')
           else:
-            likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_{i}.pdf')
+            likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_lumi{args.lumi}_{i}.pdf')
 
-      # rescaling the log likelihood such that the best fit point has ll=0
-      subtracted_ll,_=limits_file._subtract_mle(llr_kin+ll_rate)
-
-      llr_kin_histo= plot_likelihood(parameter_grid[:,0],-2.0*subtracted_ll,xlabel='cHWtil',ylabel='Rescaled -2*LLR',do_log=False)
+      llr_histo= plot_likelihood_ratio(parameter_grid[:,0],(llr_kin+llr_rate),xlabel='cHWtil',ylabel='Rescaled -2*LLR',do_log=False)
 
       if 'sally' in args.mode:
-        llr_kin_histo.savefig(f'{args.plot_dir}/limits/llr_curve_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_{i}.pdf')
+        llr_histo.savefig(f'{args.plot_dir}/limits/llr_curve_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_lumi{args.lumi}_{i}.pdf')
       else:
         if args.observable_y is None:
-          llr_kin_histo.savefig(f'{args.plot_dir}/limits/llr_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{i}.pdf')
+          llr_histo.savefig(f'{args.plot_dir}/limits/llr_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_lumi{args.lumi}_{i}.pdf')
         else:
-          llr_kin_histo.savefig(f'{args.plot_dir}/limits/llr_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_{i}.pdf')
-    
+          llr_histo.savefig(f'{args.plot_dir}/limits/llr_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_lumi{args.lumi}_{i}.pdf')
     
     central_value,cl_68,cl_95=extract_limits_single_parameter(parameter_grid,p_values,index_best_point)
     logging.debug(f'n_fit: {str(i)}, central value: {str(central_value)}; 68% CL: {str(cl_68)}; 95% CL: {str(cl_95)}')
@@ -222,6 +239,6 @@ if __name__ == "__main__":
     else:
       log_file.write(f"{args.observable_x}, {str(args.binning_x).replace(',',' ')}, {args.observable_y}, {str(args.binning_y).replace(',',' ')}, {str(central_value[0]).replace(',',' ')}, {str(cl_68).replace(',',' ')}, {str(cl_95).replace(',',' ')} \n") 
 
-  logging.debug("list of central values : ",str(list_central_values))
+  logging.debug("list of central values : "+str(list_central_values))
 
   log_file.close()
