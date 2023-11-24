@@ -73,9 +73,11 @@ if __name__== "__main__":
 
     parser.add_argument('-sm','--sally_model',help='which of the SALLY models (for each of the input variable configurations) to use',required=True)
 
+    parser.add_argument('-ci','--charge_inclusive',help='process charge-inclusive samples (split in flavour), combine after individual calculations',action='store_true',default=False)
+
     parser.add_argument('-i','--inclusive',help='process lepton+flavor inclusive samples',action='store_true',default=False)
 
-    parser.add_argument('-ci','--charge_inclusive',help='process charge-inclusive samples (split in flavour)',action='store_true',default=False)
+    parser.add_argument('-l','--lumi',help='process charge+flavor inclusive samples',type=int,default=300.)    
 
     args=parser.parse_args()
     
@@ -91,7 +93,7 @@ if __name__== "__main__":
     fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_sally(fisher_info_dict,args.main_dir,args.sample_type,lumi=300,labels=['cHW~'],
                                                                  sally_observables=args.sally_observables,sally_model=args.sally_model)
     
-    log_file_path=f'{args.plot_dir}/limits/fisherInfo_sally_{args.sample_type}'
+    log_file_path=f'{args.plot_dir}/limits/fisherInfo_sally_{args.sample_type}_lumi{args.lumi}'
     
     if args.inclusive:
         log_file_path+='_inclusive'
