@@ -206,14 +206,14 @@ if __name__ == "__main__":
         # 1D 
         if args.observable_y==None:
             fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_histograms(fisher_info_dict,observable=args.observable_x,bins_observable=args.binning_x,lumi=args.lumi)
-            log_file.write( f'{args.observable_x}, {str(args.binning_x).replace(',',' ')}, None, None, {fi_matrix_dataframe.iloc[0,0]},{1./np.sqrt(fi_matrix_dataframe.iloc[0,0])},{1.69/np.sqrt(fi_matrix_dataframe.iloc[0,0])} \n')
+            log_file.write( f"{args.observable_x}, {str(args.binning_x).replace(',',' ')}, None, None, {fi_matrix_dataframe.iloc[0,0]},{1./np.sqrt(fi_matrix_dataframe.iloc[0,0])},{1.69/np.sqrt(fi_matrix_dataframe.iloc[0,0])} \n")
             np.savez(f'{args.main_dir}/fisher_info/fi_{args.observable_x}_{len(args.binning_x)}bins_{args.sample_type}.npz', fi_list, allow_pickle=False)
             np.savez(f'{args.main_dir}/fisher_info/fi_cov_{args.observable_x}_{len(args.binning_x)}bins_{args.sample_type}.npz', fi_cov_list, allow_pickle=False)
         # 2D
         else:                
             fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_histograms(fisher_info_dict,observable=args.observable_x,bins_observable=args.binning_x,
                                                                                     observable2=args.observable_y,bins_observable2=args.binning_y,lumi=args.lumi)
-            log_file.write( f'{args.observable_x}, {str(args.binning_x).replace(',',' ')}, {args.observable_y}, {str(args.binning_y).replace(',',' ')}, {fi_matrix_dataframe.iloc[0,0]},{1./np.sqrt(fi_matrix_dataframe.iloc[0,0])},{1.69/np.sqrt(fi_matrix_dataframe.iloc[0,0])} \n')   
+            log_file.write( f"{args.observable_x}, {str(args.binning_x).replace(',',' ')}, {args.observable_y}, {str(args.binning_y).replace(',',' ')}, {fi_matrix_dataframe.iloc[0,0]},{1./np.sqrt(fi_matrix_dataframe.iloc[0,0])},{1.69/np.sqrt(fi_matrix_dataframe.iloc[0,0])} \n")   
             np.savez(f'{args.main_dir}/fisher_info/fi_{args.observable_x}_{len(args.binning_x)}bins_{args.observable_y}_{len(args.observable_y)}bins_{args.sample_type}.npz', fi_list, allow_pickle=False)
             np.savez(f'{args.main_dir}/fisher_info/fi_cov_{args.observable_x}_{len(args.binning_x)}bins_{args.observable_y}_{len(args.observable_y)}bins_{args.sample_type}.npz', fi_cov_list, allow_pickle=False)
     else:
