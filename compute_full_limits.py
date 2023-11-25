@@ -36,11 +36,11 @@ for key in logging.Logger.manager.loggerDict:
   if "madminer" not in key:
     logging.getLogger(key).setLevel(logging.WARNING)
 
-def plot_likelihood_ratio(parameter_grid,llr,xlabel,ylabel,do_log):
+def plot_likelihood_ratio(parameter_grid,log_r,xlabel,ylabel,do_log):
 
   fig = plt.figure()
 
-  plt.plot(parameter_grid,llr,color='black',lw=0.5)
+  plt.plot(parameter_grid,log_r,color='black',lw=0.5)
 
   if do_log:
     plt.yscale ('log')
@@ -48,7 +48,7 @@ def plot_likelihood_ratio(parameter_grid,llr,xlabel,ylabel,do_log):
   plt.axhline(y=1.0,linestyle='--',color='red',label='68%CL')
   plt.xlabel(xlabel)
   plt.ylabel(ylabel)
-  parameter_points_to_plot=[parameter_grid[i] for i,llr_val in enumerate(llr) if llr_val<3.28]
+  parameter_points_to_plot=[parameter_grid[i] for i,log_r_val in enumerate(log_r) if log_r_val<3.28]
   plt.xlim(-max(abs(parameter_points_to_plot[0]),abs(parameter_points_to_plot[-1])),+max(abs(parameter_points_to_plot[0]),abs(parameter_points_to_plot[-1])))
   plt.ylim(-1,3.28)
   plt.legend()
@@ -75,7 +75,7 @@ def get_thetas_eval(theta_min,theta_max,spacing):
   return thetas_eval
 
 # get indices of likelihood histograms to plot for a single coefficient
-def get_indices_llr_histograms(parameter_grid,npoints_plotting,plot_parameter_spacing=None,index_best_point=None):
+def get_indices_log_r_histograms(parameter_grid,npoints_plotting,plot_parameter_spacing=None,index_best_point=None):
   
   if plot_parameter_spacing is not None:
     npoints_plotting=int((parameter_grid[0,0]-parameter_grid[-1,0])/plot_parameter_spacing)
@@ -115,7 +115,7 @@ if __name__ == "__main__":
 
   parser.add_argument('-c','--channel',help='lepton/charge flavor channels to derive limits on',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],default='wh')
 
-  parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',choices=['signalOnly_SMonly','signalOnly','withBackgrounds_SMonly','withBackgrounds'],default='signalOnly')
+  parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',default='signalOnly')
 
   parser.add_argument('-m','--mode',help='what to use to extract the limits, given as input to the expected_limits function',choices=['rate','histo','sally'],required=True)
 
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         f'{args.main_dir}/{args.channel}_{args.sample_type}_shuffled.h5',recalculate_header=False)
       limits_file=AsymptoticLimits(f'{args.main_dir}/{args.channel}_{args.sample_type}_shuffled.h5')
 
-    parameter_grid,p_values,index_best_point,llr_kin,llr_rate,(histos, observed, observed_weights)=limits_file.expected_limits(
+    parameter_grid,p_values,index_best_point,log_r_kin,log_r_rate,(histos, observed, observed_weights)=limits_file.expected_limits(
     mode=args.mode,theta_true=[0.0], include_xsec=not args.shape_only,
     model_file=f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/sally_ensemble_{args.channel}_{args.sample_type}' if 'sally' in args.mode else None,
     hist_vars=hist_vars if 'histo' in args.mode else None,
@@ -200,7 +200,7 @@ if __name__ == "__main__":
       # plotting a subset of the likelihood histograms for debugging
       if args.debug:
         
-        indices=get_indices_llr_histograms(parameter_grid,npoints_plotting=4,index_best_point=index_best_point)
+        indices=get_indices_log_r_histograms(parameter_grid,npoints_plotting=4,index_best_point=index_best_point)
 
         likelihood_histograms = plot_histograms(
             histos=[histos[i] for i in indices],
@@ -220,15 +220,18 @@ if __name__ == "__main__":
           else:
             likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_lumi{args.lumi}_{i}.pdf')
 
-      llr_histo= plot_likelihood_ratio(parameter_grid[:,0],(llr_kin+llr_rate),xlabel='cHWtil',ylabel='Rescaled -2*LLR',do_log=False)
+      # AsymptoticLimits returs unscaled individual pieces, (re)rescaling them for plotting
+      rescaled_log_r = log_r_kin+log_r_rate
+      rescaled_log_r = -2.0*(rescaled_log_r[:] - rescaled_log_r[index_best_point])
+      log_r_histo= plot_likelihood_ratio(parameter_grid[:,0],rescaled_log_r,xlabel='cHWtil',ylabel='Rescaled -2*log_r',do_log=False)
 
       if 'sally' in args.mode:
-        llr_histo.savefig(f'{args.plot_dir}/limits/llr_curve_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_lumi{args.lumi}_{i}.pdf')
+        log_r_histo.savefig(f'{args.plot_dir}/limits/log_r_curve_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_lumi{args.lumi}_{i}.pdf')
       else:
         if args.observable_y is None:
-          llr_histo.savefig(f'{args.plot_dir}/limits/llr_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_lumi{args.lumi}_{i}.pdf')
+          log_r_histo.savefig(f'{args.plot_dir}/limits/log_r_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_lumi{args.lumi}_{i}.pdf')
         else:
-          llr_histo.savefig(f'{args.plot_dir}/limits/llr_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_lumi{args.lumi}_{i}.pdf')
+          log_r_histo.savefig(f'{args.plot_dir}/limits/log_r_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_lumi{args.lumi}_{i}.pdf')
     
     central_value,cl_68,cl_95=extract_limits_single_parameter(parameter_grid,p_values,index_best_point)
     logging.debug(f'n_fit: {str(i)}, central value: {str(central_value)}; 68% CL: {str(cl_68)}; 95% CL: {str(cl_95)}')
