@@ -187,8 +187,9 @@ if __name__ == "__main__":
     # Complete truth information (from parton-level weights)
     if args.mode=='parton':
         if 'signalOnly' in args.sample_type:                                       
-            fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_parton(fisher_info_dict,lumi=args.lumi)    
-            log_file.write( f'truth, None, None, None, {fi_matrix_dataframe.iloc[0,0]},{1./np.sqrt(fi_matrix_dataframe.iloc[0,0])},{1.69/np.sqrt(fi_matrix_dataframe.iloc[0,0])} \n')
+            fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_parton(fisher_info_dict,lumi=args.lumi)
+            fisher_info=fi_matrix_dataframe.iloc[0,0]    
+            log_file.write( f'truth, None, None, None,{fisher_info},[{-round(1./np.sqrt(fisher_info),3)} {round(1./np.sqrt(fisher_info),3)}],[{-round(1.69/np.sqrt(fisher_info),3)} {round(1.69/np.sqrt(fisher_info),3)}]\n')
             np.savez(f'{args.main_dir}/fisher_info/fi_truth_{args.sample_type}.npz', fi_list, allow_pickle=False)
             np.savez(f'{args.main_dir}/fisher_info/fi_cov_truth_{args.sample_type}.npz', fi_cov_list, allow_pickle=False)
         else:
@@ -197,25 +198,30 @@ if __name__ == "__main__":
     # Rate information
     if args.mode=='rate':
         fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_rate(fisher_info_dict,lumi=args.lumi)
-        log_file.write( f'rate, None, None, None, {fi_matrix_dataframe.iloc[0,0]},{1./np.sqrt(fi_matrix_dataframe.iloc[0,0])},{1.69/np.sqrt(fi_matrix_dataframe.iloc[0,0])} \n')
+        fisher_info=fi_matrix_dataframe.iloc[0,0]
+        log_file.write( f'rate,None,None,None,{fisher_info},
+                       [{-round(1./np.sqrt(fisher_info),3)} {round(1./np.sqrt(fisher_info),3)}],
+                       [{-round(1.69/np.sqrt(fisher_info),3)} {round(1.69/np.sqrt(fisher_info),3)}]\n')
         np.savez(f'{args.main_dir}/fisher_info/fi_rate_{args.sample_type}.npz', fi_list, allow_pickle=False)
         np.savez(f'{args.main_dir}/fisher_info/fi_cov_rate_{args.sample_type}.npz', fi_cov_list, allow_pickle=False)
 
     # histogram information
     if args.observable_x!=None:
+        fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_histograms(fisher_info_dict,observable=args.observable_x,bins_observable=args.binning_x,observable2=args.observable_y,bins_observable2=args.binning_y,lumi=args.lumi)
+        fisher_info=fi_matrix_dataframe.iloc[0,0]
+        
+        log_file.write( f"{args.observable_x},{str(args.binning_x).replace(',',' ')},{args.observable_y},{str(args.binning_y).replace(',',' ')}, {fisher_info},[{-round(1./np.sqrt(fisher_info),3)} {round(1./np.sqrt(fisher_info),3)}],
+                       [{-round(1.69/np.sqrt(fisher_info),3)} {round(1.69/np.sqrt(fisher_info),3)}]\n")
+        
         # 1D 
         if args.observable_y==None:
-            fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_histograms(fisher_info_dict,observable=args.observable_x,bins_observable=args.binning_x,lumi=args.lumi)
-            log_file.write( f"{args.observable_x}, {str(args.binning_x).replace(',',' ')}, None, None, {fi_matrix_dataframe.iloc[0,0]},{1./np.sqrt(fi_matrix_dataframe.iloc[0,0])},{1.69/np.sqrt(fi_matrix_dataframe.iloc[0,0])} \n")
             np.savez(f'{args.main_dir}/fisher_info/fi_{args.observable_x}_{len(args.binning_x)}bins_{args.sample_type}.npz', fi_list, allow_pickle=False)
             np.savez(f'{args.main_dir}/fisher_info/fi_cov_{args.observable_x}_{len(args.binning_x)}bins_{args.sample_type}.npz', fi_cov_list, allow_pickle=False)
         # 2D
         else:                
-            fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_histograms(fisher_info_dict,observable=args.observable_x,bins_observable=args.binning_x,
-                                                                                    observable2=args.observable_y,bins_observable2=args.binning_y,lumi=args.lumi)
-            log_file.write( f"{args.observable_x}, {str(args.binning_x).replace(',',' ')}, {args.observable_y}, {str(args.binning_y).replace(',',' ')}, {fi_matrix_dataframe.iloc[0,0]},{1./np.sqrt(fi_matrix_dataframe.iloc[0,0])},{1.69/np.sqrt(fi_matrix_dataframe.iloc[0,0])} \n")   
             np.savez(f'{args.main_dir}/fisher_info/fi_{args.observable_x}_{len(args.binning_x)}bins_{args.observable_y}_{len(args.observable_y)}bins_{args.sample_type}.npz', fi_list, allow_pickle=False)
             np.savez(f'{args.main_dir}/fisher_info/fi_cov_{args.observable_x}_{len(args.binning_x)}bins_{args.observable_y}_{len(args.observable_y)}bins_{args.sample_type}.npz', fi_cov_list, allow_pickle=False)
+        
     else:
         logging.warning('did not specify any of the possible histogram options, skipping...')
 

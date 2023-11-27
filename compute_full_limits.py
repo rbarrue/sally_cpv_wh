@@ -234,13 +234,13 @@ if __name__ == "__main__":
           log_r_histo.savefig(f'{args.plot_dir}/limits/log_r_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_lumi{args.lumi}_{i}.pdf')
     
     central_value,cl_68,cl_95=extract_limits_single_parameter(parameter_grid,p_values,index_best_point)
-    logging.debug(f'n_fit: {str(i)}, central value: {str(central_value)}; 68% CL: {str(cl_68)}; 95% CL: {str(cl_95)}')
+    logging.debug(f'n_fit: {str(i)}; central value: {str(central_value)}; 68% CL: {str(cl_68)}; 95% CL: {str(cl_95)}')
     list_central_values.append(central_value[0]) 
 
     if 'sally' in args.mode:
-      log_file.write(f"{args.sally_observables}, {args.sally_model}, {str(args.binning_x).replace(',',' ')}, {str(central_value[0])}, {str(cl_68).replace(',',' ')}, {str(cl_95).replace(',',' ')} \n") 
+      log_file.write(f"{args.sally_observables},{args.sally_model},{str(args.binning_x).replace(',',' ')},{str(central_value[0])}, {str(cl_68).replace(',',' ')},{str(cl_95).replace(',',' ')} \n") 
     else:
-      log_file.write(f"{args.observable_x}, {str(args.binning_x).replace(',',' ')}, {args.observable_y}, {str(args.binning_y).replace(',',' ')}, {str(central_value[0]).replace(',',' ')}, {str(cl_68).replace(',',' ')}, {str(cl_95).replace(',',' ')} \n") 
+      log_file.write(f"{args.observable_x},{str(args.binning_x).replace(',',' ')},{args.observable_y},{str(args.binning_y).replace(',',' ')},{str(central_value[0]).replace(',',' ')},{str(cl_68).replace(',',' ')},{str(cl_95).replace(',',' ')} \n") 
 
   logging.debug("list of central values : "+str(list_central_values))
 
