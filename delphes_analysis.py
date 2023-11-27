@@ -33,6 +33,14 @@ def get_ql_cos_deltaPlus(leptons=[],photons=[],jets=[],met=None,debug=False):
 
     return parton.get_ql_cos_deltaPlus([],leptons,photons,jets,met,debug)
 
+def get_cos_deltaMinus(leptons=[],photons=[],jets=[],met=None,debug=False):
+
+    return parton.get_cos_deltaMinus([],leptons,photons,jets,met,debug)
+
+def get_ql_cos_deltaMinus(leptons=[],photons=[],jets=[],met=None,debug=False):
+
+    return parton.get_ql_cos_deltaMinus([],leptons,photons,jets,met,debug)
+
 def process_events(event_path, setup_file_path, is_background_process=False, k_factor=1.0, do_delphes=False, delphes_card='cards/delphes_card_ATLAS.tcl', benchmark='sm'):
     
     reader=DelphesReader(setup_file_path)
@@ -62,6 +70,8 @@ def process_events(event_path, setup_file_path, is_background_process=False, k_f
     reader.add_observable_from_function('pz_nu', get_neutrino_pz,required=True)
     reader.add_observable_from_function('cos_deltaPlus', get_cos_deltaPlus,required=True)
     reader.add_observable_from_function('ql_cos_deltaPlus', get_ql_cos_deltaPlus,required=True)
+    reader.add_observable_from_function('cos_deltaMinus', get_cos_deltaMinus,required=True)
+    reader.add_observable_from_function('ql_cos_deltaMinus', get_ql_cos_deltaMinus,required=True)
 
     # requiring the two leading jets to be b-tagged
     reader.add_cut('j[0].b_tag',required=True)
