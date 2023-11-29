@@ -109,7 +109,7 @@ def augment_and_train(input_dir,sample_name,nevents=-1,training_observables='kin
       my_features = None
     # removing non-charge-weighted cosDelta+ (49)
     elif training_observables == 'all_observables_remove_redundant_cos':
-      my_features = [*range(48),48,50]
+      my_features = [*range(48),48,50,52]
     elif training_observables == 'ptw_ql_cos_deltaPlus':
       my_features = [18,50]      
     elif training_observables == 'mttot_ql_cos_deltaPlus':
