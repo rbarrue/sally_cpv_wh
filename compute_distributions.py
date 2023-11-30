@@ -723,7 +723,9 @@ if __name__ == '__main__':
 
     parser.add_argument('-so','--sally_observables',help='which of the SALLY training input variable set models to use',required='sally' in sys.argv)
 
-    parser.add_argument('-sm','--sally_model',help='which of the SALLY models (for each of the input variable configurations) to use.',required='sally' in sys.argv)
+    parser.add_argument('-sm','--sally_model',help='which of the SALLY training configurations to use.',required='sally' in sys.argv)
+
+    parser.add_argument('-st','--sally_type',help='which of the SALLY models (trained in signal-only vs. signal+backgrounds) to use.',required='sally' in sys.argv,choices=['signalOnly','withBackgrounds'])
 
     parser.add_argument('-shape','--do_shape_only',help='whether or not to do shape-only plots.',default=False,action='store_true')
 
@@ -777,13 +779,14 @@ if __name__ == '__main__':
                 plot_stem+='_log'
             
             histo_observables=plot_distributions_split_backgrounds(filename=f'{args.main_dir}/{channel}_{args.sample_type}.h5',
-            parameter_points=None if args.sample_type!='backgroundOnly' else [],
+            parameter_points=['sm',np.array([0.5]),np.array([-0.5]),] if args.sample_type!='backgroundOnly' else [],
             filename_bkgonly=f'{args.main_dir}/{channel}_backgroundOnly.h5',
             observables=args.observables,
             observable_labels=[obs_xlabel_dict[obs] if obs in obs_xlabel_dict else obs for obs in args.observables] if args.observables!= None else None,
-            line_labels=['SM',r'$c_\tilde{HW} = 1.15$',r'$c_\tilde{HW} = -1.035$'] if args.sample_type!='backgroundOnly' else [],
+            line_labels=['SM',r'$c_\tilde{HW} = 0.5$',r'$c_\tilde{HW} = -0.5$'] if args.sample_type!='backgroundOnly' else [],
             log=args.do_log,
             linestyles=None if args.sample_type!='backgroundOnly' else ['dashdot'],
+            colors=None if args.sample_type!='backgroundOnly' else ['C4'],
             normalize=args.do_shape_only,n_bins=args.n_bins,uncertainties='None',
             remove_negative_weights=args.remove_negative_weights,n_cols=3)
 
@@ -792,20 +795,23 @@ if __name__ == '__main__':
         else:
             
             histo_sally=plot_sally_distributions_split_backgrounds(filename=f'{args.main_dir}/{channel}_{args.sample_type}.h5',
-            parameter_points=None if args.sample_type!='backgroundOnly' else [],
+            parameter_points=['sm',np.array([0.5]),np.array([-0.5]),] if args.sample_type!='backgroundOnly' else [],
             filename_bkgonly=f'{args.main_dir}/{channel}_backgroundOnly.h5',
-            model_path=f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/sally_ensemble_{channel}_{args.sample_type}',
-            line_labels=['SM',r'$c_\tilde{HW} = 1.15$',r'$c_\tilde{HW} = -1.035$'] if args.sample_type!='backgroundOnly' else [],
+            model_path=f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/sally_ensemble_{channel}_{args.sally_type}',
+            line_labels=['SM',r'$c_\tilde{HW} = 0.5$',r'$c_\tilde{HW} = -0.5$'] if args.sample_type!='backgroundOnly' else [],
             linestyles=None if args.sample_type!='backgroundOnly' else ['dashdot'],
+            colors=None if args.sample_type!='backgroundOnly' else ['C4'],
             normalize=args.do_shape_only,log=args.do_log)
             
+            if plot_stem != '':
+                plot_stem=f'_{plot_stem}'
             if args.do_shape_only:
                 plot_stem+='_shape_only'
             if args.do_log:
                 plot_stem+='_log'
 
-            histo_sally.savefig(f'{args.plot_dir}/sally_{channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}{plot_stem}.pdf')
+            histo_sally.savefig(f'{args.plot_dir}/sally_{channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{args.sally_type}{plot_stem}.pdf')
 
             if args.plot_losses:
-                histo_sally_losses=plot_sally_train_val_losses(f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/losses_{channel}_{args.sample_type}.npz')
-                histo_sally_losses.savefig((f'{args.plot_dir}/sally_losses_{channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}.pdf'))
+                histo_sally_losses=plot_sally_train_val_losses(f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/losses_{channel}_{args.sally_type}.npz')
+                histo_sally_losses.savefig((f'{args.plot_dir}/sally_losses_{channel}_{args.sally_type}_{args.sally_observables}_{args.sally_model}.pdf'))
