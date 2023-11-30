@@ -199,8 +199,8 @@ if __name__ == "__main__":
     if args.mode=='rate':
         fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_rate(fisher_info_dict,lumi=args.lumi)
         fisher_info=fi_matrix_dataframe.iloc[0,0]
-        log_file.write( f'rate,None,None,None,{fisher_info},
-                       [{-round(1./np.sqrt(fisher_info),3)} {round(1./np.sqrt(fisher_info),3)}],
+        log_file.write( f'rate,None,None,None,{fisher_info}, \
+                       [{-round(1./np.sqrt(fisher_info),3)} {round(1./np.sqrt(fisher_info),3)}], \
                        [{-round(1.69/np.sqrt(fisher_info),3)} {round(1.69/np.sqrt(fisher_info),3)}]\n')
         np.savez(f'{args.main_dir}/fisher_info/fi_rate_{args.sample_type}.npz', fi_list, allow_pickle=False)
         np.savez(f'{args.main_dir}/fisher_info/fi_cov_rate_{args.sample_type}.npz', fi_cov_list, allow_pickle=False)
@@ -210,7 +210,7 @@ if __name__ == "__main__":
         fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_histograms(fisher_info_dict,observable=args.observable_x,bins_observable=args.binning_x,observable2=args.observable_y,bins_observable2=args.binning_y,lumi=args.lumi)
         fisher_info=fi_matrix_dataframe.iloc[0,0]
         
-        log_file.write( f"{args.observable_x},{str(args.binning_x).replace(',',' ')},{args.observable_y},{str(args.binning_y).replace(',',' ')}, {fisher_info},[{-round(1./np.sqrt(fisher_info),3)} {round(1./np.sqrt(fisher_info),3)}],
+        log_file.write( f"{args.observable_x},{str(args.binning_x).replace(',',' ')},{args.observable_y},{str(args.binning_y).replace(',',' ')}, {fisher_info},[{-round(1./np.sqrt(fisher_info),3)} {round(1./np.sqrt(fisher_info),3)}], \
                        [{-round(1.69/np.sqrt(fisher_info),3)} {round(1.69/np.sqrt(fisher_info),3)}]\n")
         
         # 1D 

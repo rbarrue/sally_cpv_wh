@@ -104,7 +104,8 @@ if __name__== "__main__":
     if os.path.getsize(f'{log_file_path}.csv') == 0:
         log_file.write('observables, model, I_00 (info on cHWtil), 68% CL, 95% CL \n')
 
-    log_file.write(f'{args.sally_observables},{args.sally_model},{fi_matrix_dataframe.iloc[0,0]},{1./np.sqrt(fi_matrix_dataframe.iloc[0,0])},{1.69/np.sqrt(fi_matrix_dataframe.iloc[0,0])} \n')
+    fisher_info=fi_matrix_dataframe.iloc[0,0]
+    log_file.write(f'{args.sally_observables},{args.sally_model},{fisher_info},{1./np.sqrt(fisher_info)},{1.69/np.sqrt(fisher_info)} \n')
     np.savez(f'{args.main_dir}/fisher_info/sally_{args.sally_observables}/{args.sally_model}/fi_{args.sample_type}.npz', fi_list, allow_pickle=False)
     np.savez(f'{args.main_dir}/fisher_info/sally_{args.sally_observables}/{args.sally_model}/fi_cov_{args.sample_type}.npz', fi_cov_list, allow_pickle=False)
 
