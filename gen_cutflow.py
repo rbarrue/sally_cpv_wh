@@ -3,7 +3,7 @@
 """
 gen_signal.py
 
-Generates WH signal events WH(->l v b b~), divided by W decay channel and charge (250k events/submission)
+Generates WH signal events WH(->l v b b~), divided by W decay channel and charge (25k events/submission)
 
 Can use different morphing setups (default: CP-odd operator only).
 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         pythia8_card_file='cards/pythia8_card.dat',
         sample_benchmarks=['sm'],
         is_background = not args.reweight,
-        run_card_files=['cards/cutflow/run_card_250k_nocuts.dat','cards/cutflow/run_card_250k_WHMadminerCuts_1.dat','cards/cutflow/run_card_250k_WHMadminerCuts_2.dat','cards/cutflow/run_card_250k_WHMadminerCuts_3.dat','cards/cutflow/run_card_250k_WHMadminerCuts_4.dat','cards/cutflow/run_card_250k_WHMadminerCuts_5.dat','cards/cutflow/run_card_250k_WHMadminerCuts_6.dat'],
+        run_card_files=['cards/cutflow/run_card_25k_nocuts.dat','cards/cutflow/run_card_25k_WHMadminerCuts_1.dat','cards/cutflow/run_card_25k_WHMadminerCuts_2.dat','cards/cutflow/run_card_25k_WHMadminerCuts_3.dat','cards/cutflow/run_card_25k_WHMadminerCuts_4.dat','cards/cutflow/run_card_25k_WHMadminerCuts_5.dat','cards/cutflow/run_card_25k_WHMadminerCuts_6.dat'],
         initial_command=args.init_command,
         only_prepare_script=args.prepare_scripts
     )
@@ -102,7 +102,7 @@ if __name__ == "__main__":
         param_card_template_file=param_card_template_file,
         sample_benchmarks=['sm'],
         is_background = True,
-        run_card_files=['cards/cutflow/run_card_250k_nocuts.dat','cards/cutflow/run_card_250k_WHMadminerCuts_1.dat','cards/cutflow/run_card_250k_WHMadminerCuts_2.dat','cards/cutflow/run_card_250k_WHMadminerCuts_3.dat','cards/cutflow/run_card_250k_WHMadminerCuts_4.dat','cards/cutflow/run_card_250k_WHMadminerCuts_5.dat','cards/cutflow/run_card_250k_WHMadminerCuts_6.dat'],
+        run_card_files=['cards/cutflow/run_card_25k_nocuts.dat','cards/cutflow/run_card_25k_WHMadminerCuts_1.dat','cards/cutflow/run_card_25k_WHMadminerCuts_2.dat','cards/cutflow/run_card_25k_WHMadminerCuts_3.dat','cards/cutflow/run_card_25k_WHMadminerCuts_4.dat','cards/cutflow/run_card_25k_WHMadminerCuts_5.dat','cards/cutflow/run_card_25k_WHMadminerCuts_6.dat'],
         initial_command=args.init_command,
         only_prepare_script=args.prepare_scripts
     )
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         param_card_template_file=param_card_template_file,
         sample_benchmarks=['sm'],
         is_background = True,
-        run_card_files=['cards/cutflow/run_card_250k_nocuts.dat','cards/cutflow/run_card_250k_WHMadminerCuts_1.dat','cards/cutflow/run_card_250k_WHMadminerCuts_2.dat','cards/cutflow/run_card_250k_WHMadminerCuts_3.dat','cards/cutflow/run_card_250k_WHMadminerCuts_4.dat','cards/cutflow/run_card_250k_WHMadminerCuts_5.dat','cards/cutflow/run_card_250k_WHMadminerCuts_6.dat'],
+        run_card_files=['cards/cutflow/run_card_25k_nocuts.dat','cards/cutflow/run_card_25k_WHMadminerCuts_1.dat','cards/cutflow/run_card_25k_WHMadminerCuts_2.dat','cards/cutflow/run_card_25k_WHMadminerCuts_3.dat','cards/cutflow/run_card_25k_WHMadminerCuts_4.dat','cards/cutflow/run_card_25k_WHMadminerCuts_5.dat','cards/cutflow/run_card_25k_WHMadminerCuts_6.dat'],
         initial_command=args.init_command,
         only_prepare_script=args.prepare_scripts
     )
@@ -130,7 +130,7 @@ if __name__ == "__main__":
         param_card_template_file=param_card_template_file,
         sample_benchmarks=['sm'],
         is_background = True,
-        run_card_files=['cards/cutflow/run_card_250k_nocuts.dat','cards/cutflow/run_card_250k_WHMadminerCuts_1.dat','cards/cutflow/run_card_250k_WHMadminerCuts_2.dat','cards/cutflow/run_card_250k_WHMadminerCuts_3.dat','cards/cutflow/run_card_250k_WHMadminerCuts_4.dat','cards/cutflow/run_card_250k_WHMadminerCuts_5.dat','cards/cutflow/run_card_250k_WHMadminerCuts_6.dat'],
+        run_card_files=['cards/cutflow/run_card_25k_nocuts.dat','cards/cutflow/run_card_25k_WHMadminerCuts_1.dat','cards/cutflow/run_card_25k_WHMadminerCuts_2.dat','cards/cutflow/run_card_25k_WHMadminerCuts_3.dat','cards/cutflow/run_card_25k_WHMadminerCuts_4.dat','cards/cutflow/run_card_25k_WHMadminerCuts_5.dat','cards/cutflow/run_card_25k_WHMadminerCuts_6.dat'],
         initial_command=args.init_command,
         only_prepare_script=args.prepare_scripts
     )
