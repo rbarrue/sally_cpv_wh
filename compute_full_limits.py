@@ -197,6 +197,7 @@ if __name__ == "__main__":
     logging.debug(f'parameter grid: {parameter_grid}')
     if i%5==0:
 
+      sally_binning_str = f"{len(args.binning_x)-1}bins" if args.binning_x != None else "25bins_sameN"
       # plotting a subset of the likelihood histograms for debugging
       if args.debug:
         
@@ -213,7 +214,7 @@ if __name__ == "__main__":
             log=args.do_log,
         )
         if 'sally' in args.mode:
-          likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{i}.pdf')
+          likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{sally_binning_str}_lumi{args.lumi}_{i}.pdf')
         else:
           if args.observable_y is None:
             likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_lumi{args.lumi}_{i}.pdf')
@@ -226,7 +227,7 @@ if __name__ == "__main__":
       log_r_histo= plot_likelihood_ratio(parameter_grid[:,0],rescaled_log_r,xlabel='cHWtil',ylabel='Rescaled -2*log_r',do_log=False)
 
       if 'sally' in args.mode:
-        log_r_histo.savefig(f'{args.plot_dir}/limits/log_r_curve_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_lumi{args.lumi}_{i}.pdf')
+        log_r_histo.savefig(f'{args.plot_dir}/limits/log_r_curve_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{sally_binning_str}_lumi{args.lumi}_{i}.pdf')
       else:
         if args.observable_y is None:
           log_r_histo.savefig(f'{args.plot_dir}/limits/log_r_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_lumi{args.lumi}_{i}.pdf')
