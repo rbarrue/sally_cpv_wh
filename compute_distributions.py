@@ -684,7 +684,7 @@ def plot_sally_distributions_split_backgrounds(filename,filename_bkgonly,model_p
     xmax_plot = xmax*1.2 if xmax > 0 else xmax/1.2
     plt.xlim(xmin_plot,xmax_plot)
 
-    plt.legend()
+    plt.legend(fontsize='x-large')
     plt.tight_layout()
     plt.xlabel("SALLY",loc='right')
 
@@ -713,7 +713,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-pdir','--plot_dir',help='folder where to save plots to',required=True)
 
-    parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',choices=['signalOnly_SMonly','signalOnly','withBackgrounds_SMonly','withBackgrounds','backgroundOnly'],default='signalOnly') # to stay like this until we reimplement the BSM sample features in the other scripts
+    parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',default='signalOnly') # to stay like this until we reimplement the BSM sample features in the other scripts
         
     parser.add_argument('-c','--channel',help='lepton+charge flavor channels to plot.',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],default=['wh'],nargs="+")
 
@@ -725,7 +725,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-sm','--sally_model',help='which of the SALLY training configurations to use.',required='sally' in sys.argv)
 
-    parser.add_argument('-st','--sally_type',help='which of the SALLY models (trained in signal-only vs. signal+backgrounds) to use.',required='sally' in sys.argv,choices=['signalOnly','withBackgrounds'])
+    parser.add_argument('-st','--sally_type',help='which of the SALLY models (trained in signal-only vs. signal+backgrounds) to use.',required='sally' in sys.argv)
 
     parser.add_argument('-shape','--do_shape_only',help='whether or not to do shape-only plots.',default=False,action='store_true')
 
@@ -801,7 +801,7 @@ if __name__ == '__main__':
             line_labels=['SM',r'$c_\tilde{HW} = 0.5$',r'$c_\tilde{HW} = -0.5$'] if args.sample_type!='backgroundOnly' else [],
             linestyles=None if args.sample_type!='backgroundOnly' else ['dashdot'],
             colors=None if args.sample_type!='backgroundOnly' else ['C4'],
-            normalize=args.do_shape_only,log=args.do_log)
+            normalize=args.do_shape_only,log=args.do_log,linewidths=1.75)
             
             if plot_stem != '':
                 plot_stem=f'_{plot_stem}'
