@@ -143,15 +143,28 @@ if __name__ == "__main__":
 
   args=parser.parse_args()
   
+  if args.debug:
+    for key in logging.Logger.manager.loggerDict:
+      if "madminer" in key:
+        logging.getLogger(key).setLevel(logging.DEBUG)
+  
   os.makedirs(f'{args.plot_dir}/limits/',exist_ok=True)
   
-  if args.observable_y is None:
-    hist_vars=[args.observable_x]
-    hist_bins=[args.binning_x] if args.binning_x is not None else None
-  else:
-    hist_vars=[args.observable_x,args.observable_y]
-    hist_bins=[args.binning_x,args.binning_y] if (args.binning_x is not None and args.binning_y is not None) else None
+  # 1D histograms
+  hist_vars=[args.observable_x]
+  # automatic binning
+  hist_bins=None
+  if args.binning_x is not None:
+    # if giving the binning itself or the number of bins
+    hist_bins=[args.binning_x] if len(args.binning_x) != 1 else [int(*args.binning_x)]
   
+  # 2D histograms
+  if args.observable_y is not None:
+    hist_vars.append(args.observable_y)
+    if args.binning_y is not None:
+      hist_bins_y=[args.binning_y] if len(args.binning_y) != 1 else [int(*args.binning_y)]
+      hist_bins.append(*hist_bins_y)
+
   logging.debug(f'hist variables: {str(hist_vars)}; hist bins: {str(hist_bins)}')
 
   #for sample_type in args.sample_type:
@@ -209,7 +222,7 @@ if __name__ == "__main__":
             observed_weights=observed_weights,
             histo_labels=[f"$cHWtil = {parameter_grid[i,0]:.2f}$" for i in indices],
             xlabel=args.observable_x,
-            xrange=(hist_bins[0][0],hist_bins[0][-1]) if hist_bins is not None else None,
+            xrange=(hist_bins[0][0],hist_bins[0][-1]) if (hist_bins is not None and isinstance(hist_bins[0],list)) else None,
             yrange=get_minmax_y_histograms([histos[i] for i in indices],epsilon=0.05) ,
             log=args.do_log,
         )
