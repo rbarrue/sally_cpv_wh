@@ -1,0 +1,28 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Code for "Simulation-based inference in the search for CP
+  violation in leptonic WH production"
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Ricardo
+    family-names: Barrué
+    email: ricardo.barrue@cern.ch
+    orcid: 'https://orcid.org/0000-0001-8985-5379'
+  - given-names: Patricia
+    family-names: Conde Muiño
+    email: patricia.conde.muino@cern.ch
+    orcid: 'https://orcid.org/0000-0002-9187-7478'
+  - given-names: Valerio
+    family-names: Dao
+    orcid: 'https://orcid.org/0000-0003-1645-8393'
+    email: valerio.dao@cern.ch
+  - given-names: Rui
+    family-names: Santos
+    email: rasantos@ciencias.ulisboa.pt
+    orcid: 'https://orcid.org/0000-0002-7948-0355'
