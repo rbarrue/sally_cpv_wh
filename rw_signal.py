@@ -38,18 +38,14 @@ if __name__ == "__main__":
 
     parser.add_argument('--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
 
-    parser.add_argument('--sample',help='sample to reweight', required=True)
-
-    parser.add_argument('--setup_file',help='name of setup file (without the .h5)',required=True)
-
     parser.add_argument('--auto_widths',help='Use parameter card with automatic width calculation',action='store_true',default=False)
 
     args=parser.parse_args()
 
     # Load morphing setup file
     miner = MadMiner()
-    miner.load(f'{args.main_dir}/{args.setup_file}.h5')
-    lhe = LHEReader(f'{args.main_dir}/{args.setup_file}.h5')
+    miner.load(f'{args.main_dir}/setup.h5')
+    lhe = LHEReader(f'{args.main_dir}/setup.h5')
 
     # List of benchmarks - SM + 2 BSM benchmarks (from Madminer)
     list_benchmarks = lhe.benchmark_names_phys
@@ -57,23 +53,27 @@ if __name__ == "__main__":
     # auto width calculation
     # NB: Madgraph+SMEFTsim include terms up to quadratic order in the automatic width calculation, even when the ME^2 is truncated at the SM+interference term
     if args.auto_widths:
-        param_card_template_file='/lstore/titan/atlas/rbarrue/HWW_tensor_structure/sally_cpv_wh/cards/param_card_template_SMEFTsim3_MwScheme_autoWidths.dat'
+        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme_autoWidths.dat'
     else:
-        param_card_template_file='/lstore/titan/atlas/rbarrue/HWW_tensor_structure/sally_cpv_wh/cards/param_card_template_SMEFTsim3_MwScheme.dat'
+        param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat'
     
     # remove element from list, returning a new list
     def remove_element(lst, element):
         new_lst = [*lst]
         new_lst.remove(element)
         return new_lst
-    
+
+    samples=['wph_mu','wph_e','wmh_mu','wmh_e']
+
     # running reweightings serially for each sample (due to concurrent file access issues)
-    for run in os.listdir(f'{args.main_dir}/signal_samples/{args.sample}_smeftsim_SM/Events'):
-        miner.reweight_existing_sample(
-            mg_process_directory=f'{args.main_dir}/signal_samples/{args.sample}_smeftsim_SM',
-            run_name=run,
-            sample_benchmark='sm',
-            reweight_benchmarks=remove_element(list_benchmarks,'sm'), 
-            param_card_template_file=param_card_template_file,
-            log_directory=f'{args.main_dir}/logs/{args.sample}_smeftsim_SM_reweight/{run}',
-        )
+    for sample in samples:
+
+        for run in os.listdir(f'{args.main_dir}/signal_samples/{args.sample}_smeftsim_SM/Events'):
+            miner.reweight_existing_sample(
+                mg_process_directory=f'{args.main_dir}/signal_samples/{args.sample}_smeftsim_SM',
+                run_name=run,
+                sample_benchmark='sm',
+                reweight_benchmarks=remove_element(list_benchmarks,'sm'), 
+                param_card_template_file=param_card_template_file,
+                log_directory=f'{args.main_dir}/logs/{args.sample}_smeftsim_SM_reweight/{run}',
+            )

@@ -37,10 +37,6 @@ if __name__ == "__main__":
     
     parser.add_argument('--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
 
-    parser.add_argument('--setup_file',help='name of setup file (without the .h5)',required=True)
-
-    parser.add_argument('--do_pythia',help='whether or not to run Pythia after Madgraph',default=False,action='store_true')
-
     parser.add_argument('--prepare_scripts',help='Prepares only run scripts to e.g. submit to a batch system separately',default=False,action='store_true')
 
     parser.add_argument('--mg_dir',help='Path for MadGraph installation',required=True)
@@ -53,10 +49,9 @@ if __name__ == "__main__":
 
     # Load morphing setup file
     miner = MadMiner()
-    miner.load(f'{args.main_dir}/{args.setup_file}.h5')
+    miner.load(f'{args.main_dir}/setup.h5')
 
-    init_command=None
-
+    # samples split by lepton charge and flavor
     samples=['wpbb_mu','wpbb_e','wmbb_mu','wmbb_e'] # W + (b-)jets
     samples+=['tpb_mu','tpb_e','tmb_mu','tmb_e'] # single top production (tb channel)
     samples+=['tt_mupjj','tt_epjj','tt_mumjj','tt_emjj'] # semi-leptonic ttbar
@@ -70,7 +65,7 @@ if __name__ == "__main__":
             mg_process_directory=f'{args.main_dir}/background_samples/{sample}_background',
             proc_card_file=f'cards/background_processes/proc_card_{sample}.dat',
             param_card_template_file='cards/param_card_template_SMEFTsim3_MwScheme.dat',
-            pythia8_card_file='cards/pythia8_card.dat' if args.do_pythia else None,
+            pythia8_card_file='cards/pythia8_card.dat',
             run_card_files=['cards/run_card_250k_WHMadminerCuts.dat' for _ in range(factor)],
             sample_benchmarks=['sm'],
             initial_command=args.init_command,

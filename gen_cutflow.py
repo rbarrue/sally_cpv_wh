@@ -50,8 +50,6 @@ if __name__ == "__main__":
 
     parser.add_argument('--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
 
-    parser.add_argument('--setup_file',help='name of setup file (without the .h5)',required=True)
-
     parser.add_argument('--auto_widths',help='Use parameter card with automatic width calculation',action='store_true',default=False)
 
     parser.add_argument('--prepare_scripts',help='Prepares only run scripts to e.g. submit to a batch system separately',action='store_true',default=False)
@@ -60,15 +58,12 @@ if __name__ == "__main__":
 
     parser.add_argument('--init_command',help='Initial command to be ran before generation (for e.g. setting environment variables)',default=None)
 
-    # speeds up sample production, since reweighting can only run on multicore mode
-    parser.add_argument('--reweight',help='if running reweighting alongside generation (doesnt work on multi-core mode)',action='store_true',default=False)
-
     args=parser.parse_args()
 
     # Load morphing setup file
     miner = MadMiner()
-    miner.load(f'{args.main_dir}/{args.setup_file}.h5')
-    lhe = LHEReader(f'{args.main_dir}/{args.setup_file}.h5')
+    miner.load(f'{args.main_dir}/setup.h5')
+    lhe = LHEReader(f'{args.main_dir}/setup.h5')
 
     # auto width calculation
     # NB: Madgraph+SMEFTsim include terms up to quadratic order in the automatic width calculation, even when the ME^2 is truncated at the SM+interference term
@@ -87,7 +82,7 @@ if __name__ == "__main__":
         # added in signal cutflow, since there was a different MG vs. Pythia XS for signal samples (not for background), this way can check both
         pythia8_card_file='cards/pythia8_card.dat',
         sample_benchmarks=['sm'],
-        is_background = not args.reweight,
+        is_background = True, # skip reweighting since samples are only used to derive cutflow
         run_card_files=['cards/cutflow/run_card_25k_nocuts.dat','cards/cutflow/run_card_25k_WHMadminerCuts_1.dat','cards/cutflow/run_card_25k_WHMadminerCuts_2.dat','cards/cutflow/run_card_25k_WHMadminerCuts_3.dat','cards/cutflow/run_card_25k_WHMadminerCuts_4.dat','cards/cutflow/run_card_25k_WHMadminerCuts_5.dat','cards/cutflow/run_card_25k_WHMadminerCuts_6.dat'],
         initial_command=args.init_command,
         only_prepare_script=args.prepare_scripts
