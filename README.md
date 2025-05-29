@@ -1,4 +1,5 @@
 # Simulation-based inference in the search for CP violation in leptonic WH production
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10650917.svg)](https://doi.org/10.5281/zenodo.10650917) 
 
 This is the companion code to "Simulation-based inference in the search for CP violation in leptonic WH production" (https://link.springer.com/article/10.1007/JHEP04(2024)014). In this paper, we benchmarked different techniques to search for CP violation in the HWW vertex in leptonic WH production.
 
