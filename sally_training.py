@@ -38,7 +38,7 @@ for key in logging.Logger.manager.loggerDict:
 # timestamp for model saving
 timestamp = strftime("%d%m%y")
 
-def augment_and_train(input_dir,sample_name,nevents=-1,training_observables='kinematic_only',nestimators=5,mode='augment_only',model_name=''):
+def augment_and_train(input_dir,sample_name,nevents=-1,training_observables='kinematic_only',nestimators=5,mode='augment_only',model_name=None):
 
   """  
   Creates training samples for the a local score-based method (SALLY), using SampleAugmenter to extract training (and test) samples and joint score.
@@ -49,11 +49,11 @@ def augment_and_train(input_dir,sample_name,nevents=-1,training_observables='kin
 
   input_dir: folder where h5 files and samples are stored
 
+  nevents: number of events with which to do augmentation and training
+
   sample_name: .h5 sample name to augment/train
 
-  observable_set: 'full' (including unobservable degrees of freedom) or 'met' (only observable degrees of freedom)
-
-  training_observables: which observables use to do the training, 'kinematic_only' (for only kinematic observables in full and met observable set), all_observables (kinematic + angular observables in met observable set)
+  training_observables: which observables use to do the training
 
   nestimators: number of estimators for SALLY method NN ensemble
 
@@ -99,21 +99,22 @@ def augment_and_train(input_dir,sample_name,nevents=-1,training_observables='kin
     logging.info(f'effective number of samples for estimator {i_estimator}: {eff_n_samples}')
 
   if mode.lower() in ['train_only','augment_and_train']:
-
+    
+      
     ########## Training ###########
+    if model_name is None:
+      logging.warning(f"No model name given, saving it as timestamp {timestamp}")
+      model_name = timestamp
 
     # Choose which features to train on 
     if training_observables == 'kinematic_only':
       my_features = list(range(48))
+    # all kinematic observables + pznu and the two charge-weighted angular observables
     if training_observables == 'all_observables':
       my_features = None
-    # removing non-charge-weighted cosDelta+ (49)
-    elif training_observables == 'all_observables_remove_redundant_cos':
-      my_features = [*range(48),48,50,52]
-    elif training_observables == 'ptw_ql_cos_deltaPlus':
-      my_features = [18,50]      
-    elif training_observables == 'mttot_ql_cos_deltaPlus':
-      my_features = [39,50]
+    # removing qlCosDelta- (49)
+    elif training_observables == 'all_observables_remove_qlCosDeltaMinus':
+      my_features = [*range(48),48,49]
     
     #Create a list of ScoreEstimator objects to add to the ensemble
     estimators = [ ScoreEstimator(features=my_features, n_hidden=(50,),activation="relu") for _ in range(nestimators) ]
@@ -140,15 +141,15 @@ if __name__ == "__main__":
 
     parser.add_argument('-m','--run_mode',help="running mode: 'augment_only' creates only training samples; 'train_only' does only the training; 'augment_and_train': does augmentation and training in one go",required=True,choices=['augment_only','train_only','augment_and_train'])
 
-    parser.add_argument('-o','--training_observables',help="observables used for the training: all observables for the full observable set and simple kinematic observables for the met observable set",default='kinematic_only',choices=['kinematic_only','all_observables_remove_redundant_cos'])
+    parser.add_argument('-o','--training_observables',help="observables used for the training: all observables for the full observable set and simple kinematic observables for the met observable set",default='kinematic_only',choices=['kinematic_only','all_observables','all_observables_remove_qlCosDeltaMinus'])
 
     parser.add_argument('-e','--nevents',help="number of events in augmented data sample/number of events on which to train on. Note: if running augmentation and training in separate jobs, these can be different, although number of events in training <= number of events in augmented data sample",type=int,default=-1)
 
-    parser.add_argument('-c','--channel',help='lepton+charge flavor channels to augment/train. included to allow parallel training of the different channels',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],nargs="+",default=['wh_mu','wh_e'])
+    parser.add_argument('-c','--channel',help='lepton+charge flavor channels to augment/train. included to allow parallel training of the different channels',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],nargs="+",default=['wh'])
     
-    parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds. included to allow sequential training for the different possibilities',choices=['signalOnly_SMonly','signalOnly','withBackgrounds_SMonly','withBackgrounds','backgroundOnly_SMonly','backgroundOnly'],nargs="+",default=['signalOnly','withBackgrounds','backgroundOnly']) # keeping BSM strings to allow adding BSM capabilities
+    parser.add_argument('-s','--sample_type',help='sample types to process, without/with backgrounds. included to allow sequential training for the different possibilities',choices=['signalOnly','withBackgrounds','backgroundOnly'],nargs="+",default=['withBackgrounds'])
 
-    parser.add_argument('-n','--model_name',help='model name, given to differentiate between, e.g. different SALLY NN configurations',default=timestamp)
+    parser.add_argument('-n','--model_name',help='model name, given to differentiate between, e.g. different SALLY NN configurations')
 
     args=parser.parse_args()
 
@@ -157,4 +158,4 @@ if __name__ == "__main__":
             
             logging.info(f'channel: {channel}; sample type: {sample_type}')
             
-            augment_and_train(input_dir=args.main_dir,training_observables=args.training_observables,model_name=args.model_name,sample_name=f'{channel}_{sample_type}',mode=args.run_mode,nevents=args.nevents)
+            augment_and_train(input_dir=args.main_dir,sample_name=f'{channel}_{sample_type}',mode=args.run_mode,nevents=args.nevents,training_observables=args.training_observables,model_name=args.model_name)
