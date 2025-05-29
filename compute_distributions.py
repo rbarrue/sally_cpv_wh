@@ -711,7 +711,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-dir','--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
 
-    parser.add_argument('-pdir','--plot_dir',help='folder where to save plots to',required=True)
+    parser.add_argument('-odir','--out_dir',help='folder where to save plots to',default=None)
 
     parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',default='signalOnly') # to stay like this until we reimplement the BSM sample features in the other scripts
         
@@ -741,7 +741,11 @@ if __name__ == '__main__':
 
     args=parser.parse_args()
 
-    os.makedirs(f'{args.plot_dir}/',exist_ok=True)
+    out_dir = args.out_dir
+    if out_dir is None:
+        out_dir = args.main_dir
+
+    os.makedirs(f'{out_dir}/plots/',exist_ok=True)
 
     obs_xlabel_dict={
         'pt_w':r'$p_T^W ~ [GeV]$',
@@ -790,7 +794,7 @@ if __name__ == '__main__':
             normalize=args.do_shape_only,n_bins=args.n_bins,uncertainties='None',
             remove_negative_weights=args.remove_negative_weights,n_cols=3)
 
-            histo_observables.savefig(f'{args.plot_dir}/{channel}_{args.sample_type}{plot_stem}.pdf')
+            histo_observables.savefig(f'{out_dir}/plots/{channel}_{args.sample_type}{plot_stem}.pdf')
         
         else:
             
@@ -810,8 +814,8 @@ if __name__ == '__main__':
             if args.do_log:
                 plot_stem+='_log'
 
-            histo_sally.savefig(f'{args.plot_dir}/sally_{channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{args.sally_type}{plot_stem}.pdf')
+            histo_sally.savefig(f'{out_dir}/plots/sally_{channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{args.sally_type}{plot_stem}.pdf')
 
             if args.plot_losses:
                 histo_sally_losses=plot_sally_train_val_losses(f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/losses_{channel}_{args.sally_type}.npz')
-                histo_sally_losses.savefig((f'{args.plot_dir}/sally_losses_{channel}_{args.sally_type}_{args.sally_observables}_{args.sally_model}.pdf'))
+                histo_sally_losses.savefig((f'{out_dir}/plots/sally_losses_{channel}_{args.sally_type}_{args.sally_observables}_{args.sally_model}.pdf'))
