@@ -1,0 +1,3 @@
+import model ${SMEFTSIM_FOLDER}/SMEFTsim_U35_MwScheme_UFO-all_WHbb_massless
+generate p p > h > l+ vl b b~ QCD=0 QED=99 NP=1
+add process p p > h > l- vl~ b b~ QCD=0 QED=99 NP=1

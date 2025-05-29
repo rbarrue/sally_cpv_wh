@@ -50,7 +50,7 @@ def plot_distributions_split_backgrounds(
     observable_labels=None,
     n_bins=50,
     line_labels=None,
-    line_labels_bkgs=None,
+    line_labels_bkgs=['Backgrounds (SM)'],
     colors=None,
     linestyles=None,
     linewidths=1.5,
@@ -212,7 +212,7 @@ def plot_distributions_split_backgrounds(
         line_labels = parameter_points
     
     if line_labels_bkgs is None:
-        line_labels_bkgs=[f"backgrounds({parameter_point})" for parameter_point in parameter_points_bkgs]
+        line_labels_bkgs=[f"Backgrounds ({parameter_point})" for parameter_point in parameter_points_bkgs]
 
     line_labels=[*line_labels,*line_labels_bkgs]
 
@@ -583,7 +583,7 @@ def plot_distributions_split_backgrounds(
 
     return fig
 
-def plot_sally_distributions_split_backgrounds(filename,filename_bkgonly,model_path,sally_component=0,n_bins=50,normalize=True,parameter_points=None,parameter_points_bkgs=['sm'],line_labels=None,line_labels_bkgs=['Backgrounds (SM)'],log=False,sample_only_from_closest_benchmark=True,colors=None,linestyles=None,linewidths=1.5):
+def plot_sally_distributions_split_backgrounds(filename,filename_bkgonly,model_path,sally_component=0,n_bins=50,normalize=True,parameter_points=None,parameter_points_bkgs=['sm'],line_labels=None,line_labels_bkgs=['Backgrounds (SM)'],log=False,colors=None,linestyles=None,linewidths=1.5,quantiles_for_range=(0.01, 0.99)):
 
     score_estimator=Ensemble()
     score_estimator.load(model_path)
@@ -627,13 +627,18 @@ def plot_sally_distributions_split_backgrounds(filename,filename_bkgonly,model_p
 
     histos=[]
 
+    logging.info('Plotting only events in the test partition')
     for parameter_point in parameter_points:
-        x,weights=sa.weighted_events(theta=parameter_point)
+        start_event_test, end_event_test, correction_factor_test = sa._train_validation_test_split('test',validation_split=0.2,test_split=0.2)
+        x,weights=sa.weighted_events(theta=parameter_point,start_event=start_event_test,end_event=end_event_test)
+        weights*=correction_factor_test # scale the events by the correction factor
         t_hat,_=score_estimator.evaluate_score(x=x)
+        xmin = weighted_quantile(t_hat[:,sally_component], quantiles_for_range[0], weights)
+        xmax = weighted_quantile(t_hat[:,sally_component], quantiles_for_range[1], weights)
         histo,bin_edges=np.histogram(
                     t_hat[:,sally_component],
                     bins=n_bins,
-                    range=(-2.0,2.0),
+                    range=(xmin,xmax),
                     weights=weights,
                     density=normalize,
                 )
@@ -642,12 +647,16 @@ def plot_sally_distributions_split_backgrounds(filename,filename_bkgonly,model_p
         histos.append(histo)
 
     for parameter_point in parameter_points_bkgs:
-        x_bkgs,weights_bkg=sa_bkgs.weighted_events(theta=parameter_point)
+        start_event_test, end_event_test, correction_factor_test = sa_bkgs._train_validation_test_split('test',validation_split=0.2,test_split=0.2)
+        x_bkgs,weights_bkg=sa_bkgs.weighted_events(theta=parameter_point,start_event=start_event_test,end_event=end_event_test)
+        weights_bkg*=correction_factor_test # scale the events by the correction factor
         t_hat_bkg,_ = score_estimator.evaluate_score(x=x_bkgs)
+        xmin = weighted_quantile(t_hat_bkg[:,sally_component], quantiles_for_range[0], weights_bkg)
+        xmax = weighted_quantile(t_hat_bkg[:,sally_component], quantiles_for_range[1], weights_bkg)
         histo,bin_edges=np.histogram(
             t_hat_bkg[:,sally_component],
             bins=n_bins,
-            range=(-2.0,2.0),
+            range=(xmin,xmax),
             weights=weights_bkg,
             density=normalize,
         )
@@ -671,9 +680,11 @@ def plot_sally_distributions_split_backgrounds(filename,filename_bkgonly,model_p
     else:
         plt.ylabel(r"$\frac{d\sigma}{dx}$ [pb / bin]")
     
-    plt.xlim(-3.0,3.0)
+    xmin_plot = xmin*1.2 if xmin < 0 else xmin/1.2
+    xmax_plot = xmax*1.2 if xmax > 0 else xmax/1.2
+    plt.xlim(xmin_plot,xmax_plot)
 
-    plt.legend()
+    plt.legend(fontsize='x-large')
     plt.tight_layout()
     plt.xlabel("SALLY",loc='right')
 
@@ -698,42 +709,47 @@ if __name__ == '__main__':
     
     parser = ap.ArgumentParser(description='Computes distributions of different variables for signal and backgrounds.',formatter_class=ap.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
+    parser.add_argument('-dir','--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
 
-    parser.add_argument('--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',choices=['signalOnly_SMonly_noSysts_lhe','signalOnly_noSysts_lhe','withBackgrounds_SMonly_noSysts_lhe','withBackgrounds_noSysts_lhe'],default='signalOnly_SMonly_noSysts_lhe')
+    parser.add_argument('-odir','--out_dir',help='folder where to save plots to',default=None)
 
-    parser.add_argument('--observable_set',help="which observable sets to process in one run: full (including unobservable degrees of freedom) or met (only observable degrees of freedom)",choices=['full','met'],default='met')
-        
-    parser.add_argument('--channel',help='lepton+charge flavor channels to plot.',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],default=['wh'],nargs="+")
+    parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',default='signalOnly')
+    
+    parser.add_argument('-c','--channel',help='lepton+charge flavor channels to plot.',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],default=['wh'],nargs="+")
 
-    parser.add_argument('--observables',help='which of the observables to plot. If None, plots all the observables in the file.',nargs="*",default=None)
+    parser.add_argument('-o','--observables',help='which of the observables to plot. If None, plots all the observables in the file.',nargs="*",default=None)
 
-    parser.add_argument('--plot_sally',help='whether to plot the distribution of the output of SALLY. uses all the weighted events in the given sample.',default=False,action='store_true')
+    parser.add_argument('-sally','--plot_sally',help='whether to plot the distribution of the output of SALLY. uses all the weighted events in the given sample.',default=False,action='store_true')
 
-    parser.add_argument('--sally_observables',help='which of the SALLY training input variable set models to use',required='sally' in sys.argv)
+    parser.add_argument('-so','--sally_observables',help='which of the SALLY training input variable set models to use',required='sally' in sys.argv)
 
-    parser.add_argument('--sally_model',help='which of the SALLY models (for each of the input variable configurations) to use.',required='sally' in sys.argv)
+    parser.add_argument('-sm','--sally_model',help='which of the SALLY training configurations to use.',required='sally' in sys.argv)
 
-    parser.add_argument('--do_shape_only',help='whether or not to do shape-only plots.',default=False,action='store_true')
+    parser.add_argument('-st','--sally_type',help='which of the SALLY models (trained in signal-only vs. signal+backgrounds) to use.',required='sally' in sys.argv)
 
-    parser.add_argument('--do_log',help='do plots in log scale',default=False,action='store_true')
+    parser.add_argument('-shape','--do_shape_only',help='whether or not to do shape-only plots.',default=False,action='store_true')
 
-    parser.add_argument('--n_bins',help='number of evenly spaced bins in the histogram',type=int,default=20)
+    parser.add_argument('-log','--do_log',help='do plots in log scale',default=False,action='store_true')
 
-    parser.add_argument('--plot_stem',help='string to add to end of the observable plot name.',default='')
+    parser.add_argument('-nb','--n_bins',help='number of evenly spaced bins in the histogram',type=int,default=20)
+
+    parser.add_argument('-stem','--plot_stem',help='string to add to end of the observable plot name.',default='')
 
     parser.add_argument('--remove_negative_weights',help='removes events with negative weights from entering the plot',default=False,action='store_true')
 
+    parser.add_argument('-l','--plot_losses',help='plots losses',default=False,action='store_true')
+
     args=parser.parse_args()
 
-    # Partition to store h5 files and samples + path to setup file
-    main_proc_dir = f'{args.main_dir}/{args.observable_set}'
-    main_plot_dir = f'{args.main_dir}/plots/{args.observable_set}'
+    out_dir = args.out_dir
+    if out_dir is None:
+        out_dir = args.main_dir
 
-    os.makedirs(f'{main_plot_dir}/',exist_ok=True)
+    os.makedirs(f'{out_dir}/plots/',exist_ok=True)
 
     obs_xlabel_dict={
         'pt_w':r'$p_T^W ~ [GeV]$',
+        #'pt_l':r'$p_T^\ell ~ [GeV]$',
         'mt_tot':r'$m_T^{\ell \nu b \bar{b}} ~ [GeV]$',
         'pz_nu':r'$p_z^{\nu}$',
         'cos_deltaPlus':r'$\cos \delta^+$',
@@ -741,6 +757,9 @@ if __name__ == '__main__':
         'ql_cos_deltaPlus':r'$Q_{\ell} ~\cos \delta^+$',
         'ql_cos_deltaMinus':r'$Q_{\ell} ~\cos \delta^-$',
     }
+
+    if args.sample_type=='backgroundOnly':
+        logging.warning("Plotting only background distributions")
 
     for channel in args.channel:
 
@@ -763,31 +782,40 @@ if __name__ == '__main__':
             if args.do_log:
                 plot_stem+='_log'
             
-            histo_observables=plot_distributions_split_backgrounds(filename=f'{main_proc_dir}/{channel}_{args.sample_type}.h5',
-            parameter_points=None,
-            filename_bkgonly=f'{main_proc_dir}/{channel}_backgroundOnly_noSysts_lhe.h5',
+            histo_observables=plot_distributions_split_backgrounds(filename=f'{args.main_dir}/{channel}_{args.sample_type}.h5',
+            parameter_points=['sm',np.array([0.5]),np.array([-0.5]),] if args.sample_type!='backgroundOnly' else [],
+            filename_bkgonly=f'{args.main_dir}/{channel}_backgroundOnly.h5',
             observables=args.observables,
-            observable_labels=[obs_xlabel_dict[obs] for obs in args.observables] if args.observables!= None else None,
+            observable_labels=[obs_xlabel_dict[obs] if obs in obs_xlabel_dict else obs for obs in args.observables] if args.observables!= None else None,
+            line_labels=['SM',r'$c_\tilde{HW} = 0.5$',r'$c_\tilde{HW} = -0.5$'] if args.sample_type!='backgroundOnly' else [],
             log=args.do_log,
-            line_labels_bkgs=['Backgrounds (SM)'],
+            linestyles=None if args.sample_type!='backgroundOnly' else ['dashdot'],
+            colors=None if args.sample_type!='backgroundOnly' else ['C4'],
             normalize=args.do_shape_only,n_bins=args.n_bins,uncertainties='None',
-            remove_negative_weights=args.remove_negative_weights,n_cols=len(args.observables) if args.observables!= None else 3)
+            remove_negative_weights=args.remove_negative_weights,n_cols=3)
 
-            histo_observables.savefig(f'{main_plot_dir}/{channel}_{args.sample_type}{plot_stem}.pdf')
+            histo_observables.savefig(f'{out_dir}/plots/{channel}_{args.sample_type}{plot_stem}.pdf')
         
         else:
             
-            histo_sally=plot_sally_distributions_split_backgrounds(filename=f'{main_proc_dir}/{channel}_{args.sample_type}.h5',
-            filename_bkgonly=f'{main_proc_dir}/{channel}_backgroundOnly_noSysts_lhe.h5',
-            model_path=f'{main_proc_dir}/models/{args.sally_model}/{args.sally_observables}/sally_ensemble_{channel}_{args.sample_type}',
-            normalize=args.do_shape_only,log=args.do_log)
+            histo_sally=plot_sally_distributions_split_backgrounds(filename=f'{args.main_dir}/{channel}_{args.sample_type}.h5',
+            parameter_points=['sm',np.array([0.5]),np.array([-0.5]),] if args.sample_type!='backgroundOnly' else [],
+            filename_bkgonly=f'{args.main_dir}/{channel}_backgroundOnly.h5',
+            model_path=f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/sally_ensemble_{channel}_{args.sally_type}',
+            line_labels=['SM',r'$c_\tilde{HW} = 0.5$',r'$c_\tilde{HW} = -0.5$'] if args.sample_type!='backgroundOnly' else [],
+            linestyles=None if args.sample_type!='backgroundOnly' else ['dashdot'],
+            colors=None if args.sample_type!='backgroundOnly' else ['C4'],
+            normalize=args.do_shape_only,log=args.do_log,linewidths=1.75)
             
+            if plot_stem != '':
+                plot_stem=f'_{plot_stem}'
             if args.do_shape_only:
                 plot_stem+='_shape_only'
             if args.do_log:
                 plot_stem+='_log'
 
-            histo_sally.savefig(f'{main_plot_dir}/sally_{channel}_{args.sample_type}_{args.sally_model}_{args.sally_observables}{plot_stem}.pdf')
+            histo_sally.savefig(f'{out_dir}/plots/sally_{channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{args.sally_type}{plot_stem}.pdf')
 
-            histo_sally_losses=plot_sally_train_val_losses(f'{main_proc_dir}/models/{args.sally_model}/{args.sally_observables}/losses_{channel}_{args.sample_type}.npz')
-            histo_sally_losses.savefig((f'{main_plot_dir}/sally_losses_{channel}_{args.sample_type}_{args.sally_model}_{args.sally_observables}.pdf'))
+            if args.plot_losses:
+                histo_sally_losses=plot_sally_train_val_losses(f'{args.main_dir}/models/{args.sally_observables}/{args.sally_model}/losses_{channel}_{args.sally_type}.npz')
+                histo_sally_losses.savefig((f'{out_dir}/plots/sally_losses_{channel}_{args.sally_type}_{args.sally_observables}_{args.sally_model}.pdf'))

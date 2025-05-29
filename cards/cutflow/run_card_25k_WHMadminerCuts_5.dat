@@ -27,7 +27,7 @@
 # Number of events and rnd seed                                      *
 # Warning: Do not generate more than 1M events in a single run       *
 #*********************************************************************
-  250000 = nevents ! Number of unweighted events requested 
+  25000 = nevents ! Number of unweighted events requested 
   0   = iseed   ! rnd seed (0=assigned automatically=default))
 #*********************************************************************
 # Collider type and energy                                           *
@@ -117,7 +117,7 @@
  10.0  = pta       ! minimum pt for the photons 
  10.0  = ptl       ! minimum pt for the charged leptons 
  25.0  = misset    ! minimum missing Et (sum of neutrino's momenta)
- 30.0  = ptjmax    ! maximum pt for the jets
+ -1.0  = ptjmax    ! maximum pt for the jets
  -1.0  = ptbmax    ! maximum pt for the b
  -1.0  = ptamax    ! maximum pt for the photons
  -1.0  = ptlmax    ! maximum pt for the charged leptons
@@ -169,11 +169,11 @@
 #          different lepton masses for each flavor!                  *           
 #*********************************************************************
  0.0   = mmjj    ! min invariant mass of a jet pair 
- 80.0   = mmbb    ! min invariant mass of a b pair 
+ 0.0   = mmbb    ! min invariant mass of a b pair 
  0.0   = mmaa    ! min invariant mass of gamma gamma pair
  0.0   = mmll    ! min invariant mass of l+l- (same flavour) lepton pair
  -1.0  = mmjjmax ! max invariant mass of a jet pair
- 160.0  = mmbbmax ! max invariant mass of a b pair
+ -1.0 = mmbbmax ! max invariant mass of a b pair
  -1.0  = mmaamax ! max invariant mass of gamma gamma pair
  -1.0  = mmllmax ! max invariant mass of l+l- (same flavour) lepton pair
  {} = mxx_min_pdg ! min invariant mass of a pair of particles X/X~ (e.g. {6:250})

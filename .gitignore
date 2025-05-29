@@ -1,1 +1,5 @@
 models/
+py.py
+*.out
+*.pyc
+ME5_debug

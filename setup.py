@@ -53,13 +53,16 @@ if __name__ == "__main__":
         lha_block='smeftcpv',
         lha_id=4,
         parameter_name='cHWtil',
-        morphing_max_power=2, # interference + squared terms
+        morphing_max_power=2, # interference + squared terms (matches what is in the run cards)
         parameter_range=(-1.2,1.2),
-        param_card_transform='1.0*theta' # mandatory to avoid a crash due to a bug (see Evernote)
+        param_card_transform='1.0*theta' # mandatory to avoid a crash due to a bug
     )
 
-    # Only want the SM benchmark specifically - let Madminer choose the others
-    miner.add_benchmark({'cHWtil':0.000000},'sm')
+    # values originally obtained from morphing functionality
+    # hardcoded to match what's on the paper
+    miner.add_benchmark({'cHWtil':0.00},'sm')
+    miner.add_benchmark({'cHWtil':1.15},'pos_chwtil')
+    miner.add_benchmark({'cHWtil':-1.035},'neg_chwtil')
 
     # Morphing - automatic optimization to avoid large weights
     miner.set_morphing(max_overall_power=2,include_existing_benchmarks=True)
