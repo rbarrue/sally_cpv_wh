@@ -713,8 +713,8 @@ if __name__ == '__main__':
 
     parser.add_argument('-odir','--out_dir',help='folder where to save plots to',default=None)
 
-    parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',default='signalOnly') # to stay like this until we reimplement the BSM sample features in the other scripts
-        
+    parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',default='signalOnly')
+    
     parser.add_argument('-c','--channel',help='lepton+charge flavor channels to plot.',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],default=['wh'],nargs="+")
 
     parser.add_argument('-o','--observables',help='which of the observables to plot. If None, plots all the observables in the file.',nargs="*",default=None)
