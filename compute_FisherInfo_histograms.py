@@ -38,7 +38,10 @@ for key in logging.Logger.manager.loggerDict:
       logging.getLogger(key).setLevel(logging.WARNING)
 
 # function to fetch and load dict of FisherInformation objects
-def get_FisherInfo_dict(main_dir,sample_type,include_nuisance_parameters=False,charge_inclusive=False,inclusive=False):
+# original behavior was to calculate the Fisher Information separately for each charge/flavor pair
+# this was found to lead to wrong results for angular observable limits
+# implemented the calculation of the Fisher Information from the inclusive sample (which is the default)
+def get_FisherInfo_dict(main_dir,sample_type,include_nuisance_parameters=False,charge_inclusive=False,inclusive=True):
 
     fisher_info_dict={}
 
@@ -142,9 +145,9 @@ if __name__ == "__main__":
 
     parser.add_argument('-dir','--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
 
-    parser.add_argument('-pdir','--plot_dir',help='folder where to save plots to',required=True)
+    parser.add_argument('-odir','--out_dir',help='folder where to save results to',default=None)
 
-    parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',choices=['signalOnly_SMonly','signalOnly','withBackgrounds_SMonly','withBackgrounds'],default='signalOnly')
+    parser.add_argument('-s','--sample_type',help='sample types to process, without/with backgrounds.',choices=['signalOnly','withBackgrounds'],default='withBackgrounds')
 
     parser.add_argument('-m','--mode',help='what to use to extract the limits, given as input to the expected_limits function',choices=['parton','rate','histo'],required=True)
 
@@ -158,26 +161,26 @@ if __name__ == "__main__":
 
     parser.add_argument('-ci','--charge_inclusive',help='process charge-inclusive samples (still split in flavour)',action='store_true',default=False)
 
-    parser.add_argument('-i','--inclusive',help='process charge+flavor inclusive samples',action='store_true',default=False)
-
     parser.add_argument('-l','--lumi',help='process charge+flavor inclusive samples',type=int,default=300.)    
 
     args=parser.parse_args()
     
-    # store FI matrix information
-    os.makedirs(f'{args.main_dir}/fisher_info/',exist_ok=True)
-    os.makedirs(f'{args.plot_dir}/limits/',exist_ok=True)
-
     logging.debug(args)
 
+    out_dir = args.out_dir
+    if out_dir is None:
+        out_dir = args.main_dir
+
+    # store FI matrix information
+    os.makedirs(f'{args.main_dir}/fisher_info/',exist_ok=True)
+    os.makedirs(f'{out_dir}/limits/',exist_ok=True)
+
     # Loading FisherInformation objects
-    fisher_info_dict=get_FisherInfo_dict(args.main_dir,args.sample_type,include_nuisance_parameters=False,charge_inclusive=args.charge_inclusive,inclusive=args.inclusive)  
+    fisher_info_dict=get_FisherInfo_dict(args.main_dir,args.sample_type,include_nuisance_parameters=False,charge_inclusive=args.charge_inclusive)  
 
-    log_file_path=f'{args.plot_dir}/limits/fisherInfo_histograms_{args.sample_type}_lumi{args.lumi}'
+    log_file_path=f'{out_dir}/limits/fisherInfo_histograms_{args.sample_type}_lumi{args.lumi}'
 
-    if args.inclusive:
-        log_file_path+='_inclusive'
-    elif args.charge_inclusive:
+    if args.charge_inclusive:
         log_file_path+='_charge_inclusive'
 
     log_file=open(f'{log_file_path}.csv','a')

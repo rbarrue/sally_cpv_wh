@@ -65,11 +65,11 @@ if __name__== "__main__":
 
     parser.add_argument('-dir','--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
 
-    parser.add_argument('-pdir','--plot_dir',help='folder where to save plots to',required=True)
+    parser.add_argument('-odir','--out_dir',help='folder where to save results to',default=None)
 
-    parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',choices=['signalOnly_SMonly','signalOnly','withBackgrounds_SMonly','withBackgrounds'],default='signalOnly')
+    parser.add_argument('-s','--sample_type',help='sample types to process, without/with backgrounds.',choices=['signalOnly','withBackgrounds'],default='withBackgrounds')
 
-    parser.add_argument('-so','--sally_observables',help="observables used for the training: all observables for the full observable set and simple kinematic observables for the met observable set",default='kinematic_only',choices=['kinematic_only','all_observables_remove_redundant_cos'])
+    parser.add_argument('-so','--sally_observables',help="observables used for the training: all observables for the full observable set and simple kinematic observables for the met observable set",default='kinematic_only',choices=['kinematic_only','all_observables','all_observables_remove_qlCosDeltaMinus'])
 
     parser.add_argument('-sm','--sally_model',help='which of the SALLY models (for each of the input variable configurations) to use',required=True)
 
@@ -77,11 +77,15 @@ if __name__== "__main__":
 
     parser.add_argument('-i','--inclusive',help='process lepton+flavor inclusive samples',action='store_true',default=False)
 
-    parser.add_argument('-l','--lumi',help='process charge+flavor inclusive samples',type=int,default=300.)    
+    parser.add_argument('-l','--lumi',help='luminosity with which to extract the limits',type=int,default=300.)    
 
     args=parser.parse_args()
     
-    os.makedirs(f'{args.plot_dir}/limits/',exist_ok=True)
+    out_dir = args.out_dir
+    if out_dir is None:
+        out_dir = args.main_dir
+
+    os.makedirs(f'{out_dir}/limits/',exist_ok=True)
 
     logging.debug(args)
 
@@ -93,7 +97,7 @@ if __name__== "__main__":
     fi_matrix_dataframe,fi_list,fi_cov_list=get_FisherInfo_sally(fisher_info_dict,args.main_dir,args.sample_type,lumi=300,labels=['cHW~'],
                                                                  sally_observables=args.sally_observables,sally_model=args.sally_model)
     
-    log_file_path=f'{args.plot_dir}/limits/fisherInfo_sally_{args.sample_type}_lumi{args.lumi}'
+    log_file_path=f'{out_dir}/limits/fisherInfo_sally_{args.sample_type}_lumi{args.lumi}'
     
     if args.inclusive:
         log_file_path+='_inclusive'

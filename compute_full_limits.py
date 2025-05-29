@@ -111,11 +111,11 @@ if __name__ == "__main__":
 
   parser.add_argument('-dir','--main_dir',help='folder where to keep everything for MadMiner WH studies, on which we store Madgraph samples and all .h5 files (setup, analyzed events, ...)',required=True)
 
-  parser.add_argument('-pdir','--plot_dir',help='folder where to save plots to',required=True)
+  parser.add_argument('-odir','--plot_dir',help='folder where to save plots to',default=None)
 
   parser.add_argument('-c','--channel',help='lepton/charge flavor channels to derive limits on',choices=['wph_mu','wph_e','wmh_mu','wmh_e','wmh','wph','wh_mu','wh_e','wh'],default='wh')
 
-  parser.add_argument('-s','--sample_type',help='sample types to process, without/with samples generated at the BSM benchmark and without/with backgrounds.',default='signalOnly')
+  parser.add_argument('-s','--sample_type',help='sample types to process, without/with backgrounds.',default='signalOnly')
 
   parser.add_argument('-m','--mode',help='what to use to extract the limits, given as input to the expected_limits function',choices=['rate','histo','sally'],required=True)
 
@@ -148,7 +148,13 @@ if __name__ == "__main__":
       if "madminer" in key:
         logging.getLogger(key).setLevel(logging.DEBUG)
   
-  os.makedirs(f'{args.plot_dir}/limits/',exist_ok=True)
+  logging.debug(args)
+
+  out_dir = args.out_dir
+  if out_dir is None:
+    out_dir = args.main_dir
+
+  os.makedirs(f'{out_dir}/limits/',exist_ok=True)
   
   # 1D histograms
   hist_vars=[args.observable_x]
@@ -172,9 +178,9 @@ if __name__ == "__main__":
   list_central_values=[]
 
   if 'sally' in args.mode:
-    log_file_path=f"{args.plot_dir}/limits/full_sally_{args.sample_type}_lumi{args.lumi}"  
+    log_file_path=f"{out_dir}/limits/full_sally_{args.sample_type}_lumi{args.lumi}"  
   else:
-    log_file_path=f"{args.plot_dir}/limits/full_histograms_{args.sample_type}_lumi{args.lumi}"
+    log_file_path=f"{out_dir}/limits/full_histograms_{args.sample_type}_lumi{args.lumi}"
 
   if args.shape_only:
     log_file_path += '_shape_only'
@@ -227,12 +233,12 @@ if __name__ == "__main__":
             log=args.do_log,
         )
         if 'sally' in args.mode:
-          likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{sally_binning_str}_lumi{args.lumi}_{i}.pdf')
+          likelihood_histograms.savefig(f'{out_dir}/limits/likelihoods_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{sally_binning_str}_lumi{args.lumi}_{i}.pdf')
         else:
           if args.observable_y is None:
-            likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_lumi{args.lumi}_{i}.pdf')
+            likelihood_histograms.savefig(f'{out_dir}/limits/likelihoods_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_lumi{args.lumi}_{i}.pdf')
           else:
-            likelihood_histograms.savefig(f'{args.plot_dir}/limits/likelihoods_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_lumi{args.lumi}_{i}.pdf')
+            likelihood_histograms.savefig(f'{out_dir}/limits/likelihoods_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_lumi{args.lumi}_{i}.pdf')
 
       # AsymptoticLimits returs unscaled individual pieces, (re)rescaling them for plotting
       rescaled_log_r = log_r_kin+log_r_rate
@@ -240,12 +246,12 @@ if __name__ == "__main__":
       log_r_histo= plot_likelihood_ratio(parameter_grid[:,0],rescaled_log_r,xlabel='cHWtil',ylabel='Rescaled -2*log_r',do_log=False)
 
       if 'sally' in args.mode:
-        log_r_histo.savefig(f'{args.plot_dir}/limits/log_r_curve_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{sally_binning_str}_lumi{args.lumi}_{i}.pdf')
+        log_r_histo.savefig(f'{out_dir}/limits/log_r_curve_sally_{args.channel}_{args.sample_type}_{args.sally_observables}_{args.sally_model}_{sally_binning_str}_lumi{args.lumi}_{i}.pdf')
       else:
         if args.observable_y is None:
-          log_r_histo.savefig(f'{args.plot_dir}/limits/log_r_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_lumi{args.lumi}_{i}.pdf')
+          log_r_histo.savefig(f'{out_dir}/limits/log_r_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_lumi{args.lumi}_{i}.pdf')
         else:
-          log_r_histo.savefig(f'{args.plot_dir}/limits/log_r_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_lumi{args.lumi}_{i}.pdf')
+          log_r_histo.savefig(f'{out_dir}/limits/log_r_curve_{args.channel}_{args.sample_type}_{args.observable_x}_{len(args.binning_x)-1}bins_{args.observable_y}_{len(args.binning_y)-1}bins_lumi{args.lumi}_{i}.pdf')
     
     central_value,cl_68,cl_95=extract_limits_single_parameter(parameter_grid,p_values,index_best_point)
     logging.debug(f'n_fit: {str(i)}; central value: {str(central_value)}; 68% CL: {str(cl_68)}; 95% CL: {str(cl_95)}')
