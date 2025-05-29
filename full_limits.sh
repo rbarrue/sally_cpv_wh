@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export MAIN_DIR='output/'
+MAIN_DIR='output/'
     
 # extracting limits with the full likelihood ratio and the asymptotic formalism (including rate term)
 python compute_full_limits.py --main_dir ${MAIN_DIR} --mode histo --observable_x pt_w --binning_x 0. 150. 250. 1e9 

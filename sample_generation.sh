@@ -2,27 +2,15 @@
 
 # file to run all the steps in the generation
 
-export DELPHES_DIR='/cvmfs/sw.el7/gcc63/madgraph/3.3.1/b01/Delphes/'
-export MADGRAPH_DIR='/cvmfs/sw.el7/gcc63/madgraph/3.3.1/b01/'
-export MAIN_DIR='output/'
+DELPHES_DIR='/cvmfs/sw.el7/gcc63/madgraph/3.3.1/b01/Delphes/'
+MADGRAPH_DIR='/cvmfs/sw.el7/gcc63/madgraph/3.3.1/b01/'
+MAIN_DIR='output/'
 
 # run setup
 python setup.py --main_dir ${MAIN_DIR}
 
 # setting up the SMEFTsim model
-if [ -d "./models/SMEFTsim_U35_MwScheme_UFO/" ]; then
-    echo "SMEFTsim model found, setting up the environment variable"
-    export SMEFTSIM_FOLDER=${PWD}/models/
-else
-    echo "SMEFTsim model not found, downloading it and then setting up the environment variable"
-    wget http://feynrules.irmp.ucl.ac.be/raw-attachment/wiki/SMEFT/SMEFTsim_U35_MwScheme_UFO.tar.gz
-    tar -xzvf SMEFTsim_U35_MwScheme_UFO.tar.gz
-    rm -r SMEFTsim_U35_MwScheme_UFO.tar.gz
-    mkdir -p models
-    mv -n SMEFTsim_U35_MwScheme_UFO models/
-    cp cards/restrict_all_WHbb_massless.dat models/SMEFTsim_U35_MwScheme_UFO/
-    export SMEFTSIM_FOLDER=${PWD}/models/
-fi
+source setup_SMEFTsim_model.sh
 
 # generate signal and background samples 
 

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+MAIN_DIR='output/'
+
 # creating the training dataset, augmented with the joint score information
 python sally_training.py --main_dir ${MAIN_DIR} --mode augment_only -c wh -s withBackgrounds
 

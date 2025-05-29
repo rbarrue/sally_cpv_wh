@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export MAIN_DIR='output/'
+MAIN_DIR='output/'
 
 # extracting limits with linearized likelihood ratio using Fisher Information and Local Fisher Distance
 # parton-level (optimal limits) and rate-only 
